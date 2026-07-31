@@ -5,6 +5,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.1] - 2026-07-31
+
+### Fixed
+- CI deploy workflow was pinned to Node 20, but `jsdom@30` (a test dependency) requires Node ^22.22.2 — every test worker crashed on startup (`webidl.util.markAsUncloneable is not a function`) and the deploy never got past the test step. Bumped the workflow to Node 22.
+- Added an `engines.node` field (`>=22.22.2`) to `package.json` to self-document this requirement and avoid the same mismatch recurring.
+
 ## [0.7.0] - 2026-07-31
 
 ### Added
