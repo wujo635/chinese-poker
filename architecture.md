@@ -28,19 +28,20 @@ src/
   main.tsx          # React entry point
 ```
 
-## Engine Layer (planned)
-Pure functions with no side effects, unit-tested independently of the UI:
-- `deck.ts` — deck creation, shuffling, dealing, card comparison
-- `handRank.ts` — hand type identification and strength scoring
-- `compareHands.ts` — comparing two hands
-- `validate.ts` — arrangement validation (foul detection)
-- `game.ts` — game/round orchestration and scoring
-- `ai.ts` — AI opponent arrangement logic
-- `persistence.ts` — localStorage save/load/clear
+## Engine Layer
+Pure functions with no side effects, unit-tested independently of the UI (`src/engine/__tests__/`):
+- `deck.ts` — deck creation, shuffling, dealing, card comparison. Ace is 14 by default.
+- `handRank.ts` — `getHandStrength()` returns a comparable `[category, ...tiebreakers]` tuple (not just a 1-10 number) so same-category hands compare correctly by kicker. Straight detection special-cases the A-2-3-4-5 wheel (high card = 5, not 14). Royal Flush is category 9 internally (same as Straight Flush) — `identifyHandType()` only distinguishes it for display naming, since an Ace-high straight flush already outranks others via the tiebreaker. **3-card front hands only ever reach High Card / Pair / Three of a Kind** — straights/flushes are not scored at 3 cards, per standard Chinese Poker rules.
+- `compareHands.ts` — compares two same-size hands via their strength tuples; falls back to a suit tiebreaker (♠>♥>♦>♣) on each hand's highest card if the rank strength is exactly equal.
+- `validate.ts` — `validateArrangement()` requires **strict** back > middle > front; an exact tie between two rows is a foul.
+- `game.ts` — game/round orchestration. `resolveRound()` scores every pair of players independently (round-robin), so `GameState.results` holds one `RoundResult` per (player, opponent) pairing rather than one per player — a player's total round score is the sum of their entries. A fouled player auto-loses -6 against every valid opponent; two fouled players tie 0 against each other.
+- `ai.ts` — `generateAIArrangement()`: brute-force strongest 5-card back, then strongest 5-card middle from the remainder, leftover 3 cards become front. Can theoretically foul on rare/weak hands (acceptable for MVP per spec).
+- `persistence.ts` — localStorage save/load/clear (not yet implemented — Phase 3)
 
 ## Status
 - **v0.1.0**: Project scaffolding only. No game logic or custom UI yet.
 - **v0.2.0**: Core types defined (`Card`, `Player`, `Arrangement`, `GameState`). `front`/`middle`/`back` are typed as fixed-length tuples (3/5/5) rather than plain arrays for compile-time safety. No engine logic yet.
+- **v0.3.0**: Full engine layer implemented and unit-tested (deck, hand ranking, comparison, validation, game/round orchestration, AI arrangement). No UI yet — not runnable as an app.
 
 ## Change Log Pointer
 See [CHANGELOG.md](CHANGELOG.md) for version history. This document should be updated alongside every feature that changes the app's structure.
