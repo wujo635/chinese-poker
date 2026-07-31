@@ -5,6 +5,20 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2026-07-31
+
+### Added
+- 4-player AI opponents: dealing now auto-arranges the 3 AI players immediately via `generateAIArrangement()`
+- `PlayerDashboard`: shows AI opponents as face-down "Locked In" while the human arranges
+- `ResultsScreen`: post-round reveal with human-vs-each-AI matchup breakdown (front/middle/back + net score), a standings list with a crown for the top scorer, and all 4 revealed hands with hand-type labels
+- `RoundResult.opponentId` added so the UI can look up a specific matchup without relying on array order
+- 5 new tests (ResultsScreen, PlayerDashboard)
+
+### Changed
+- `ReviewScreen` simplified back to its original pre-confirm-only role — the "locked" final view is now `ResultsScreen`'s job
+
+Manually verified end-to-end in-browser: dealt hand → AI opponents lock in instantly → human arranges and confirms → results correctly show win/loss/tie per hand, a -6 scoop loss, and accurate standings.
+
 ## [0.5.0] - 2026-07-31
 
 ### Added

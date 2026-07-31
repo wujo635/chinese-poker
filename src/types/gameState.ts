@@ -6,6 +6,7 @@ export type MatchupResult = 'win' | 'loss' | 'tie';
 
 export interface RoundResult {
   playerId: string;
+  opponentId: string;
   frontResult: MatchupResult;
   middleResult: MatchupResult;
   backResult: MatchupResult;
