@@ -18,6 +18,10 @@ src/
     __tests__/     # Vitest unit tests for engine modules
   components/       # React UI components
   types/            # Shared TypeScript types (Card, Player, GameState, ...)
+    card.ts          # Suit, Rank, Card
+    player.ts         # PlayerType, Arrangement (front/middle/back tuples), Player
+    gameState.ts       # GameStatus, MatchupResult, RoundResult, GameState
+    index.ts           # barrel export
   test/
     setup.ts        # Vitest/jest-dom global test setup
   App.tsx           # Root component (Vite default, to be replaced)
@@ -36,6 +40,7 @@ Pure functions with no side effects, unit-tested independently of the UI:
 
 ## Status
 - **v0.1.0**: Project scaffolding only. No game logic or custom UI yet.
+- **v0.2.0**: Core types defined (`Card`, `Player`, `Arrangement`, `GameState`). `front`/`middle`/`back` are typed as fixed-length tuples (3/5/5) rather than plain arrays for compile-time safety. No engine logic yet.
 
 ## Change Log Pointer
 See [CHANGELOG.md](CHANGELOG.md) for version history. This document should be updated alongside every feature that changes the app's structure.

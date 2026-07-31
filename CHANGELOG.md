@@ -5,6 +5,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-07-31
+
+### Added
+- Core TypeScript types: `Card`, `Suit`, `Rank` (`src/types/card.ts`)
+- `Player`, `PlayerType`, `Arrangement` with tuple-typed `front` (3) / `middle` (5) / `back` (5) hands (`src/types/player.ts`)
+- `GameState`, `GameStatus`, `MatchupResult`, `RoundResult` (`src/types/gameState.ts`)
+- Barrel export at `src/types/index.ts`
+
 ## [0.1.0] - 2026-07-30
 
 ### Added
