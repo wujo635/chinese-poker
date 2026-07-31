@@ -9,7 +9,7 @@ Chinese Poker (十三水) MVP — a React + TypeScript + Vite single-page app. G
 - **Testing**: Vitest + React Testing Library (jsdom environment)
 - **Linting**: oxlint
 - **Persistence**: browser `localStorage` (no backend)
-- **Deploy target**: GitHub Pages (static build, `base: '/chinese-poker/'` in `vite.config.ts`)
+- **Deploy target**: GitHub Pages (static build, `base: '/chinese-poker/'` in `vite.config.ts`), auto-deployed via `.github/workflows/deploy.yml` on push to `main`
 
 ## Folder Structure
 ```
@@ -55,6 +55,7 @@ Pure functions with no side effects, unit-tested independently of the UI (`src/e
   - **Known limitation**: "Save & Exit" persists the dealt hand but not in-progress card placement — resuming a saved game re-deals the same `GameState` and the player re-arranges from scratch. Acceptable for MVP; revisit if it's annoying in practice.
   - `App.tsx` owns all game/view state (`GameState`, the in-progress `ArrangementState`, and which screen is showing) and passes it down; components are otherwise presentational plus local UI-only state (e.g. `ArrangementScreen`'s currently-selected card).
 - **v0.6.0**: 4-player AI opponents (Phase 5). Dealing a round now immediately auto-arranges the 3 AI players via `generateAIArrangement()` and locks them in — `PlayerDashboard` shows them as face-down "Locked In" while the human arranges. Confirming the human's arrangement triggers `resolveRound()` and moves to `ResultsScreen`, which shows the human's matchup results against each AI (front/middle/back win/loss/tie + net score), a standings list with a crown for the top scorer, and all 4 players' hands revealed with hand-type labels. Manually verified end-to-end in-browser, including a scoop loss (-6) and a mixed matchup result. Replaced `RoundResult`'s previous ambiguity by adding `opponentId` (see engine notes above).
+- **v0.7.0**: GitHub Pages deploy workflow (Phase 7). `.github/workflows/deploy.yml` builds and deploys on every push to `main` using the official `actions/{configure,upload,deploy}-pages` flow: install → `test:ci` (Vitest in non-watch mode, added as a separate script from the interactive `test`) → `build` → deploy. Requires a one-time manual step in the GitHub repo (Settings → Pages → Source → "GitHub Actions") before the first deploy will actually publish — not something this workflow file itself can configure.
 
 ## Change Log Pointer
 See [CHANGELOG.md](CHANGELOG.md) for version history. This document should be updated alongside every feature that changes the app's structure.

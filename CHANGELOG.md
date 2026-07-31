@@ -5,6 +5,15 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] - 2026-07-31
+
+### Added
+- `.github/workflows/deploy.yml`: builds and deploys to GitHub Pages on every push to `main` (install → test → build → deploy via the official Pages Actions)
+- `npm run test:ci` script (`vitest run`, non-watch mode) for use in CI, separate from the interactive `npm run test`
+
+### Note
+Requires a one-time manual step before the first deploy publishes: in the GitHub repo, go to **Settings → Pages → Source** and select **"GitHub Actions"**.
+
 ## [0.6.0] - 2026-07-31
 
 ### Added
