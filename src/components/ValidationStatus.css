@@ -1,0 +1,21 @@
+.validation-status {
+  padding: 0.6rem 1rem;
+  border-radius: 0.4rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.validation-status--incomplete {
+  background: #f0f0f0;
+  color: #555;
+}
+
+.validation-status--valid {
+  background: #e3f7e8;
+  color: #1e7e34;
+}
+
+.validation-status--invalid {
+  background: #fdecea;
+  color: #b02a37;
+}
