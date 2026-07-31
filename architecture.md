@@ -36,12 +36,13 @@ Pure functions with no side effects, unit-tested independently of the UI (`src/e
 - `validate.ts` — `validateArrangement()` requires **strict** back > middle > front; an exact tie between two rows is a foul.
 - `game.ts` — game/round orchestration. `resolveRound()` scores every pair of players independently (round-robin), so `GameState.results` holds one `RoundResult` per (player, opponent) pairing rather than one per player — a player's total round score is the sum of their entries. A fouled player auto-loses -6 against every valid opponent; two fouled players tie 0 against each other.
 - `ai.ts` — `generateAIArrangement()`: brute-force strongest 5-card back, then strongest 5-card middle from the remainder, leftover 3 cards become front. Can theoretically foul on rare/weak hands (acceptable for MVP per spec).
-- `persistence.ts` — localStorage save/load/clear (not yet implemented — Phase 3)
+- `persistence.ts` — `saveGameState`/`loadGameState`/`clearGameState` keyed by `gameId` under a `chinese-poker:game:` localStorage prefix; `listSavedGameIds()` scans that prefix for a "load saved game" screen. `loadGameState` returns `null` (not a throw) on missing or corrupted data.
 
 ## Status
 - **v0.1.0**: Project scaffolding only. No game logic or custom UI yet.
 - **v0.2.0**: Core types defined (`Card`, `Player`, `Arrangement`, `GameState`). `front`/`middle`/`back` are typed as fixed-length tuples (3/5/5) rather than plain arrays for compile-time safety. No engine logic yet.
 - **v0.3.0**: Full engine layer implemented and unit-tested (deck, hand ranking, comparison, validation, game/round orchestration, AI arrangement). No UI yet — not runnable as an app.
+- **v0.4.0**: localStorage persistence added. Engine layer is now feature-complete for the MVP. Still no UI — not runnable as an app yet (that's Phase 4).
 
 ## Change Log Pointer
 See [CHANGELOG.md](CHANGELOG.md) for version history. This document should be updated alongside every feature that changes the app's structure.
