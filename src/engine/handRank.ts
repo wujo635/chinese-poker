@@ -93,7 +93,7 @@ export function getHandStrength(cards: Card[]): HandStrength {
 }
 
 export function getSuitValue(suit: Card['suit']): number {
-  return { spades: 4, hearts: 3, diamonds: 2, clubs: 1 }[suit];
+  return { spades: 4, hearts: 3, clubs: 2, diamonds: 1 }[suit];
 }
 
 export function identifyHandType(cards: Card[]): string {

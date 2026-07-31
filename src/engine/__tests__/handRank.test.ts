@@ -5,10 +5,10 @@ import type { Card } from '../../types';
 const c = (suit: Card['suit'], rank: Card['rank'], value: number): Card => ({ suit, rank, value });
 
 describe('getSuitValue', () => {
-  it('ranks ♠ > ♥ > ♦ > ♣', () => {
+  it('ranks ♠ > ♥ > ♣ > ♦', () => {
     expect(getSuitValue('spades')).toBeGreaterThan(getSuitValue('hearts'));
-    expect(getSuitValue('hearts')).toBeGreaterThan(getSuitValue('diamonds'));
-    expect(getSuitValue('diamonds')).toBeGreaterThan(getSuitValue('clubs'));
+    expect(getSuitValue('hearts')).toBeGreaterThan(getSuitValue('clubs'));
+    expect(getSuitValue('clubs')).toBeGreaterThan(getSuitValue('diamonds'));
   });
 });
 
