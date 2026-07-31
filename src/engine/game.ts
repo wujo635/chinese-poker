@@ -76,19 +76,22 @@ function scorePairwise(a: Player, b: Player): [RoundResult, RoundResult] {
   const bFouled = !b.isValid || !b.arrangement;
 
   if (aFouled && bFouled) {
-    const tie: Omit<RoundResult, 'playerId'> = { frontResult: 'tie', middleResult: 'tie', backResult: 'tie', roundScore: 0 };
-    return [{ playerId: a.id, ...tie }, { playerId: b.id, ...tie }];
+    const tie = { frontResult: 'tie', middleResult: 'tie', backResult: 'tie', roundScore: 0 } as const;
+    return [
+      { playerId: a.id, opponentId: b.id, ...tie },
+      { playerId: b.id, opponentId: a.id, ...tie },
+    ];
   }
   if (aFouled) {
     return [
-      { playerId: a.id, frontResult: 'loss', middleResult: 'loss', backResult: 'loss', roundScore: -6 },
-      { playerId: b.id, frontResult: 'win', middleResult: 'win', backResult: 'win', roundScore: 6 },
+      { playerId: a.id, opponentId: b.id, frontResult: 'loss', middleResult: 'loss', backResult: 'loss', roundScore: -6 },
+      { playerId: b.id, opponentId: a.id, frontResult: 'win', middleResult: 'win', backResult: 'win', roundScore: 6 },
     ];
   }
   if (bFouled) {
     return [
-      { playerId: a.id, frontResult: 'win', middleResult: 'win', backResult: 'win', roundScore: 6 },
-      { playerId: b.id, frontResult: 'loss', middleResult: 'loss', backResult: 'loss', roundScore: -6 },
+      { playerId: a.id, opponentId: b.id, frontResult: 'win', middleResult: 'win', backResult: 'win', roundScore: 6 },
+      { playerId: b.id, opponentId: a.id, frontResult: 'loss', middleResult: 'loss', backResult: 'loss', roundScore: -6 },
     ];
   }
 
@@ -101,8 +104,15 @@ function scorePairwise(a: Player, b: Player): [RoundResult, RoundResult] {
   const aScore = scoopedByA ? 6 : scoopedByB ? -6 : pointsFor(aFront) + pointsFor(aMiddle) + pointsFor(aBack);
 
   return [
-    { playerId: a.id, frontResult: aFront, middleResult: aMiddle, backResult: aBack, roundScore: aScore },
-    { playerId: b.id, frontResult: flip(aFront), middleResult: flip(aMiddle), backResult: flip(aBack), roundScore: -aScore },
+    { playerId: a.id, opponentId: b.id, frontResult: aFront, middleResult: aMiddle, backResult: aBack, roundScore: aScore },
+    {
+      playerId: b.id,
+      opponentId: a.id,
+      frontResult: flip(aFront),
+      middleResult: flip(aMiddle),
+      backResult: flip(aBack),
+      roundScore: -aScore,
+    },
   ];
 }
 

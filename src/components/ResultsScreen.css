@@ -1,0 +1,79 @@
+.results-screen {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 44rem;
+}
+
+.results-screen__matchups,
+.results-screen__standings {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.matchup-row,
+.standings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.5rem 0.8rem;
+  border-radius: 0.4rem;
+  background: #f0f0f0;
+  font-size: 0.9rem;
+}
+
+.matchup-row__name {
+  flex: 1;
+  font-weight: 600;
+}
+
+.matchup-row__cell {
+  min-width: 5rem;
+}
+
+.matchup-row__score,
+.standings-row__score {
+  font-weight: 700;
+  min-width: 2.5rem;
+  text-align: right;
+}
+
+.matchup-row__score--positive,
+.standings-row__score--positive {
+  color: #1e7e34;
+}
+
+.matchup-row__score--negative,
+.standings-row__score--negative {
+  color: #b02a37;
+}
+
+.matchup-row__score--even,
+.standings-row__score--even {
+  color: #555;
+}
+
+.results-screen__hands {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.results-screen__player-hands h4 {
+  margin: 0 0 0.4rem;
+}
+
+.results-screen__zones {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.results-screen__actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}

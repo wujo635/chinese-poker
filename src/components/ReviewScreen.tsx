@@ -9,19 +9,16 @@ interface ReviewScreenProps {
   front: Card[];
   middle: Card[];
   back: Card[];
-  locked?: boolean;
-  onBack?: () => void;
-  onConfirm?: () => void;
-  onPlayAgain?: () => void;
-  onHome?: () => void;
+  onBack: () => void;
+  onConfirm: () => void;
 }
 
-export function ReviewScreen({ front, middle, back, locked, onBack, onConfirm, onPlayAgain, onHome }: ReviewScreenProps) {
+export function ReviewScreen({ front, middle, back, onBack, onConfirm }: ReviewScreenProps) {
   const validation = validateArrangement(front as FrontHand, middle as FiveCardHand, back as FiveCardHand);
 
   return (
     <div className="review-screen">
-      <h2>{locked ? 'Your Final Arrangement' : 'Review Your Arrangement'}</h2>
+      <h2>Review Your Arrangement</h2>
       <div className="review-screen__zones">
         <HandZone label="Front" cards={front} capacity={3} handTypeLabel={identifyHandType(front)} />
         <HandZone label="Middle" cards={middle} capacity={5} handTypeLabel={identifyHandType(middle)} />
@@ -29,25 +26,12 @@ export function ReviewScreen({ front, middle, back, locked, onBack, onConfirm, o
       </div>
       <ValidationStatus status={validation.isValid ? 'valid' : 'invalid'} foulReason={validation.foulReason} />
       <div className="review-screen__actions">
-        {locked ? (
-          <>
-            <button type="button" onClick={onPlayAgain}>
-              Play Again
-            </button>
-            <button type="button" onClick={onHome}>
-              Home
-            </button>
-          </>
-        ) : (
-          <>
-            <button type="button" onClick={onBack}>
-              Back to Arranging
-            </button>
-            <button type="button" onClick={onConfirm} disabled={!validation.isValid}>
-              Confirm
-            </button>
-          </>
-        )}
+        <button type="button" onClick={onBack}>
+          Back to Arranging
+        </button>
+        <button type="button" onClick={onConfirm} disabled={!validation.isValid}>
+          Confirm
+        </button>
       </div>
     </div>
   );
