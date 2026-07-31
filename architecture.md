@@ -17,6 +17,12 @@ src/
   engine/          # Pure game logic, no React dependencies
     __tests__/     # Vitest unit tests for engine modules
   components/       # React UI components
+    __tests__/       # React Testing Library component tests
+    Home.tsx          # New Game / Continue Saved Game
+    CardView.tsx       # Single-card display (rank/suit, selectable)
+    HandZone.tsx        # A front/middle/back zone: cards placed + empty slots to place into
+    ArrangementScreen.tsx # Click-to-assign hand arranging: select a card, click a zone slot to place it
+    ReviewScreen.tsx      # Read-only view of an arrangement; doubles as the locked "final result" view
   types/            # Shared TypeScript types (Card, Player, GameState, ...)
     card.ts          # Suit, Rank, Card
     player.ts         # PlayerType, Arrangement (front/middle/back tuples), Player
@@ -43,6 +49,9 @@ Pure functions with no side effects, unit-tested independently of the UI (`src/e
 - **v0.2.0**: Core types defined (`Card`, `Player`, `Arrangement`, `GameState`). `front`/`middle`/`back` are typed as fixed-length tuples (3/5/5) rather than plain arrays for compile-time safety. No engine logic yet.
 - **v0.3.0**: Full engine layer implemented and unit-tested (deck, hand ranking, comparison, validation, game/round orchestration, AI arrangement). No UI yet — not runnable as an app.
 - **v0.4.0**: localStorage persistence added. Engine layer is now feature-complete for the MVP. Still no UI — not runnable as an app yet (that's Phase 4).
+- **v0.5.0**: Solo-play UI complete and manually verified in-browser (deal → click-to-assign arrange → live validation/hand-type display → review → confirm → locked result; Save & Exit / Continue Saved Game round-trips through localStorage). This is the first version that's actually playable. Single human player only — no AI opponents or scoring yet (Phase 5).
+  - **Known limitation**: "Save & Exit" persists the dealt hand but not in-progress card placement — resuming a saved game re-deals the same `GameState` and the player re-arranges from scratch. Acceptable for MVP; revisit if it's annoying in practice.
+  - `App.tsx` owns all game/view state (`GameState`, the in-progress `ArrangementState`, and which screen is showing) and passes it down; components are otherwise presentational plus local UI-only state (e.g. `ArrangementScreen`'s currently-selected card).
 
 ## Change Log Pointer
 See [CHANGELOG.md](CHANGELOG.md) for version history. This document should be updated alongside every feature that changes the app's structure.

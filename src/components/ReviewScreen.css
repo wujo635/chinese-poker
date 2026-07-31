@@ -1,0 +1,21 @@
+.review-screen {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  width: 100%;
+  max-width: 40rem;
+  text-align: center;
+}
+
+.review-screen__zones {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  text-align: left;
+}
+
+.review-screen__actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
