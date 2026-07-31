@@ -1,8 +1,11 @@
 {
   "name": "chinese-poker",
   "private": true,
-  "version": "0.7.0",
+  "version": "0.7.1",
   "type": "module",
+  "engines": {
+    "node": ">=22.22.2"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
