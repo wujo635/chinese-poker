@@ -10,7 +10,7 @@ function renderScreen(arrangement: ArrangementState, allowInvalidSubmissions = f
   const onChange = vi.fn();
   const onReview = vi.fn();
   const onSaveExit = vi.fn();
-  render(
+  const { unmount } = render(
     <ArrangementScreen
       arrangement={arrangement}
       allowInvalidSubmissions={allowInvalidSubmissions}
@@ -19,7 +19,7 @@ function renderScreen(arrangement: ArrangementState, allowInvalidSubmissions = f
       onSaveExit={onSaveExit}
     />,
   );
-  return { onChange, onReview, onSaveExit };
+  return { onChange, onReview, onSaveExit, unmount };
 }
 
 describe('ArrangementScreen', () => {
@@ -86,18 +86,36 @@ describe('ArrangementScreen', () => {
     expect(screen.getByRole('button', { name: 'Review' })).toBeEnabled();
   });
 
-  it('hides the foul message when invalid submissions are allowed', () => {
-    renderScreen(
-      {
-        hand: [],
-        front: [c('spades', 'A', 14), c('hearts', 'A', 14), c('diamonds', 'A', 14)],
-        middle: [c('clubs', '2', 2), c('spades', '3', 3), c('hearts', '4', 4), c('diamonds', '6', 6), c('clubs', '9', 9)],
-        back: [c('spades', 'K', 13), c('hearts', 'K', 13), c('diamonds', 'K', 13), c('clubs', 'K', 13), c('spades', '2', 2)],
-      },
-      true,
-    );
+  it('hides all validation status messages once invalid submissions are allowed', () => {
+    const foulArrangement = {
+      hand: [],
+      front: [c('spades', 'A', 14), c('hearts', 'A', 14), c('diamonds', 'A', 14)],
+      middle: [c('clubs', '2', 2), c('spades', '3', 3), c('hearts', '4', 4), c('diamonds', '6', 6), c('clubs', '9', 9)],
+      back: [c('spades', 'K', 13), c('hearts', 'K', 13), c('diamonds', 'K', 13), c('clubs', 'K', 13), c('spades', '2', 2)],
+    };
+    const { unmount } = renderScreen(foulArrangement, true);
     expect(screen.queryByText(/foul/i)).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Review' })).toBeEnabled();
+    unmount();
+
+    const validArrangement = {
+      hand: [],
+      front: [c('spades', '2', 2), c('hearts', '2', 2), c('diamonds', '5', 5)],
+      middle: [c('clubs', '8', 8), c('spades', '8', 8), c('hearts', '3', 3), c('diamonds', '4', 4), c('clubs', '9', 9)],
+      back: [c('spades', 'A', 14), c('hearts', 'A', 14), c('diamonds', 'A', 14), c('clubs', 'A', 14), c('spades', '9', 9)],
+    };
+    const { unmount: unmount2 } = renderScreen(validArrangement, true);
+    expect(screen.queryByText(/valid arrangement/i)).not.toBeInTheDocument();
+    unmount2();
+
+    const incompleteArrangement = {
+      hand: [c('clubs', '2', 2)],
+      front: [c('spades', 'A', 14), c('hearts', 'A', 14), c('diamonds', 'A', 14)],
+      middle: [],
+      back: [],
+    };
+    renderScreen(incompleteArrangement, true);
+    expect(screen.queryByText(/place all 13 cards/i)).not.toBeInTheDocument();
   });
 
   it('displays the hand tray sorted by value then suit, not dealt order', () => {

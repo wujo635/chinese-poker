@@ -136,7 +136,7 @@ export function ArrangementScreen({
         />
       </div>
 
-      {!(allowInvalidSubmissions && validation && !validation.isValid) && (
+      {!allowInvalidSubmissions && (
         <ValidationStatus
           status={!isComplete ? 'incomplete' : validation!.isValid ? 'valid' : 'invalid'}
           foulReason={validation?.foulReason}
