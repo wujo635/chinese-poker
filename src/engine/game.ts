@@ -1,6 +1,7 @@
-import type { FiveCardHand, FrontHand, GameState, Player, RoundResult, MatchupResult } from '../types';
+import type { Card, FiveCardHand, FrontHand, GameState, Player, RoundResult, MatchupResult } from '../types';
 import { createDeck, dealCards, shuffleDeck } from './deck';
 import { compareHands } from './compareHands';
+import { getHandStrength } from './handRank';
 import { validateArrangement } from './validate';
 
 export function initializeGame(playerNames: string[]): GameState {
@@ -62,12 +63,36 @@ function flip(result: MatchupResult): MatchupResult {
   return 'tie';
 }
 
-function pointsFor(result: MatchupResult): number {
-  return result === 'win' ? 1 : result === 'loss' ? -1 : 0;
+/** Front only ever reaches High Card/Pair/Trips (category 4); Trips is worth 3, everything else 1. */
+function frontPoints(category: number): number {
+  return category === 4 ? 3 : 1;
 }
 
-function toResult(diff: number): MatchupResult {
-  return diff > 0 ? 'win' : diff < 0 ? 'loss' : 'tie';
+/** Middle: Full House=2, Four of a Kind=8, Straight/Royal Flush=10, everything else 1. */
+function middlePoints(category: number): number {
+  if (category === 9) return 10;
+  if (category === 8) return 8;
+  if (category === 7) return 2;
+  return 1;
+}
+
+/** Back: Four of a Kind=4, Straight/Royal Flush=5, everything else 1. */
+function backPoints(category: number): number {
+  if (category === 9) return 5;
+  if (category === 8) return 4;
+  return 1;
+}
+
+/**
+ * Compares one zone between two hands from `a`'s perspective. The point value is based on
+ * the *winning* hand's category on that zone's scale (see frontPoints/middlePoints/backPoints);
+ * ties score 0.
+ */
+function scoreZone(aHand: Card[], bHand: Card[], pointsFor: (category: number) => number): { result: MatchupResult; score: number } {
+  const diff = compareHands(aHand, bHand);
+  if (diff === 0) return { result: 'tie', score: 0 };
+  if (diff > 0) return { result: 'win', score: pointsFor(getHandStrength(aHand)[0]) };
+  return { result: 'loss', score: -pointsFor(getHandStrength(bHand)[0]) };
 }
 
 /** Scores one pairing between two players, returning a RoundResult from each player's perspective. */
@@ -95,22 +120,26 @@ function scorePairwise(a: Player, b: Player): [RoundResult, RoundResult] {
     ];
   }
 
-  const aFront = toResult(compareHands(a.arrangement!.front, b.arrangement!.front));
-  const aMiddle = toResult(compareHands(a.arrangement!.middle, b.arrangement!.middle));
-  const aBack = toResult(compareHands(a.arrangement!.back, b.arrangement!.back));
-
-  const scoopedByA = aFront === 'win' && aMiddle === 'win' && aBack === 'win';
-  const scoopedByB = aFront === 'loss' && aMiddle === 'loss' && aBack === 'loss';
-  const aScore = scoopedByA ? 6 : scoopedByB ? -6 : pointsFor(aFront) + pointsFor(aMiddle) + pointsFor(aBack);
+  const front = scoreZone(a.arrangement!.front, b.arrangement!.front, frontPoints);
+  const middle = scoreZone(a.arrangement!.middle, b.arrangement!.middle, middlePoints);
+  const back = scoreZone(a.arrangement!.back, b.arrangement!.back, backPoints);
+  const aScore = front.score + middle.score + back.score;
 
   return [
-    { playerId: a.id, opponentId: b.id, frontResult: aFront, middleResult: aMiddle, backResult: aBack, roundScore: aScore },
+    {
+      playerId: a.id,
+      opponentId: b.id,
+      frontResult: front.result,
+      middleResult: middle.result,
+      backResult: back.result,
+      roundScore: aScore,
+    },
     {
       playerId: b.id,
       opponentId: a.id,
-      frontResult: flip(aFront),
-      middleResult: flip(aMiddle),
-      backResult: flip(aBack),
+      frontResult: flip(front.result),
+      middleResult: flip(middle.result),
+      backResult: flip(back.result),
       roundScore: -aScore,
     },
   ];

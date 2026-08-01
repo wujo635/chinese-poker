@@ -7,12 +7,29 @@ A web app for Chinese Poker: deal 13 cards, arrange them into front (3), middle 
 - Live validation and hand-type feedback as you arrange (foul detection: back must beat middle, middle must beat front)
 - Hand tray sorted by rank/suit, plus a one-click "Auto-Place" suggestion
 - 3 AI opponents that arrange their own hands automatically
-- Round scoring: ±1 per hand won/lost, ±6 scoop bonus, automatic foul loss
+- Round scoring: each hand is worth points based on the winning hand's strength (see below), automatic -6 foul loss
 - Results screen with matchup breakdown, standings, and all hands revealed
 - Save & Exit / Continue Saved Game via browser `localStorage`
 
 ## Suit tiebreaker order
 ♠ Spades > ♥ Hearts > ♣ Clubs > ♦ Diamonds — used only when two hands/cards are otherwise exactly equal in rank strength.
+
+## Scoring
+Each of the three hands (front/middle/back) is scored independently — the winner earns points based on the strength of their winning hand, the loser loses the same amount, and ties score 0:
+
+| Hand | Trigger | Points |
+|---|---|---|
+| Front | Three of a Kind | 3 |
+| Front | Anything else | 1 |
+| Middle | Straight / Royal Flush | 10 |
+| Middle | Four of a Kind | 8 |
+| Middle | Full House | 2 |
+| Middle | Anything else | 1 |
+| Back | Straight / Royal Flush | 5 |
+| Back | Four of a Kind | 4 |
+| Back | Anything else | 1 |
+
+A round score is the sum of the three hands' points. A fouled arrangement (back doesn't beat middle, or middle doesn't beat front) is an automatic -6 loss against every valid opponent.
 
 ## Getting Started
 

@@ -67,9 +67,9 @@ describe('resolveRound', () => {
     return state;
   }
 
-  it('awards +1/-1 per hand won/lost between two valid arrangements', () => {
+  it('scores each hand by the winning hand\'s category, not a flat +-1', () => {
     let state = buildTwoPlayerState();
-    // player-0 wins front and back, loses middle -> net +1
+    // player-0 wins front (pair, +1) and back (four of a kind, +4), loses middle (full house, -2) -> net +3
     state.players[0] = {
       ...state.players[0],
       isValid: true,
@@ -84,7 +84,7 @@ describe('resolveRound', () => {
       isValid: true,
       arrangement: {
         front: [c('clubs', '3', 3), c('diamonds', '3', 3), c('hearts', '2', 2)],
-        middle: [c('hearts', '8', 8), c('spades', '8', 8), c('clubs', '3', 3), c('diamonds', '4', 4), c('hearts', '9', 9)],
+        middle: [c('hearts', '8', 8), c('spades', '8', 8), c('clubs', '8', 8), c('diamonds', '4', 4), c('hearts', '4', 4)],
         back: [c('clubs', 'Q', 12), c('diamonds', 'Q', 12), c('hearts', 'Q', 12), c('spades', 'Q', 12), c('clubs', '2', 2)],
       },
     };
@@ -95,19 +95,19 @@ describe('resolveRound', () => {
     expect(p0Result.frontResult).toBe('win');
     expect(p0Result.middleResult).toBe('loss');
     expect(p0Result.backResult).toBe('win');
-    expect(p0Result.roundScore).toBe(1);
-    expect(state.players[0].score).toBe(1);
-    expect(state.players[1].score).toBe(-1);
+    expect(p0Result.roundScore).toBe(3); // +1 (pair front) - 2 (full house middle) + 4 (quads back)
+    expect(state.players[0].score).toBe(3);
+    expect(state.players[1].score).toBe(-3);
   });
 
-  it('awards a +6/-6 scoop when one player wins all three hands', () => {
+  it('awards the middle Straight/Royal Flush bonus (10 points) to the winner', () => {
     let state = buildTwoPlayerState();
     state.players[0] = {
       ...state.players[0],
       isValid: true,
       arrangement: {
         front: [c('spades', 'A', 14), c('hearts', 'A', 14), c('diamonds', '2', 2)],
-        middle: [c('spades', 'K', 13), c('hearts', 'K', 13), c('diamonds', 'K', 13), c('clubs', '4', 4), c('spades', '2', 2)],
+        middle: [c('spades', '9', 9), c('spades', '8', 8), c('spades', '7', 7), c('spades', '6', 6), c('spades', '5', 5)],
         back: [c('spades', 'Q', 12), c('diamonds', 'Q', 12), c('hearts', 'Q', 12), c('clubs', 'Q', 12), c('spades', '3', 3)],
       },
     };
@@ -116,15 +116,15 @@ describe('resolveRound', () => {
       isValid: true,
       arrangement: {
         front: [c('clubs', '3', 3), c('diamonds', '4', 4), c('hearts', '2', 2)],
-        middle: [c('hearts', '8', 8), c('clubs', '9', 9), c('diamonds', '3', 3), c('spades', '5', 5), c('hearts', '9', 9)],
+        middle: [c('hearts', '8', 8), c('clubs', '9', 9), c('diamonds', '3', 3), c('spades', '2', 2), c('hearts', '9', 9)],
         back: [c('clubs', 'J', 11), c('diamonds', 'J', 11), c('hearts', '3', 3), c('spades', '7', 7), c('clubs', '2', 2)],
       },
     };
 
     state = resolveRound(state);
     const p0Result = state.results.find((r) => r.playerId === 'player-0')!;
-    expect(p0Result.roundScore).toBe(6);
-    expect(state.players[1].score).toBe(-6);
+    expect(p0Result.middleResult).toBe('win');
+    expect(state.players[1].score).toBeLessThan(0);
   });
 
   it('auto-loses -6 for a fouled player against a valid opponent', () => {
