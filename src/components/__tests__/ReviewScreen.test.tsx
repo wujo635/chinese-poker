@@ -44,6 +44,7 @@ describe('ReviewScreen', () => {
 
     const confirmButton = screen.getByRole('button', { name: 'Confirm' });
     expect(confirmButton).toBeEnabled();
+    expect(screen.queryByText(/foul/i)).not.toBeInTheDocument();
 
     await user.click(confirmButton);
     expect(onConfirm).toHaveBeenCalled();

@@ -25,7 +25,9 @@ export function ReviewScreen({ front, middle, back, allowInvalidSubmissions, onB
         <HandZone label="Middle" cards={middle} capacity={5} handTypeLabel={identifyHandType(middle)} />
         <HandZone label="Back" cards={back} capacity={5} handTypeLabel={identifyHandType(back)} />
       </div>
-      <ValidationStatus status={validation.isValid ? 'valid' : 'invalid'} foulReason={validation.foulReason} />
+      {!(allowInvalidSubmissions && !validation.isValid) && (
+        <ValidationStatus status={validation.isValid ? 'valid' : 'invalid'} foulReason={validation.foulReason} />
+      )}
       <div className="review-screen__actions">
         <button type="button" onClick={onBack}>
           Back to Arranging
