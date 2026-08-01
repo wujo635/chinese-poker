@@ -18,6 +18,7 @@ export interface ArrangementState {
 
 interface ArrangementScreenProps {
   arrangement: ArrangementState;
+  allowInvalidSubmissions: boolean;
   onChange: (next: ArrangementState) => void;
   onReview: () => void;
   onSaveExit: () => void;
@@ -30,7 +31,13 @@ function cardKey(card: Card): string {
   return `${card.suit}-${card.rank}`;
 }
 
-export function ArrangementScreen({ arrangement, onChange, onReview, onSaveExit }: ArrangementScreenProps) {
+export function ArrangementScreen({
+  arrangement,
+  allowInvalidSubmissions,
+  onChange,
+  onReview,
+  onSaveExit,
+}: ArrangementScreenProps) {
   const [selected, setSelected] = useState<Card | null>(null);
   const { hand, front, middle, back } = arrangement;
 
@@ -129,10 +136,12 @@ export function ArrangementScreen({ arrangement, onChange, onReview, onSaveExit 
         />
       </div>
 
-      <ValidationStatus
-        status={!isComplete ? 'incomplete' : validation!.isValid ? 'valid' : 'invalid'}
-        foulReason={validation?.foulReason}
-      />
+      {!(allowInvalidSubmissions && validation && !validation.isValid) && (
+        <ValidationStatus
+          status={!isComplete ? 'incomplete' : validation!.isValid ? 'valid' : 'invalid'}
+          foulReason={validation?.foulReason}
+        />
+      )}
 
       <div className="arrangement-screen__actions">
         <button

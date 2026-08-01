@@ -10,8 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - New Home screen option: "Allow submitting an invalid arrangement" checkbox (default off). When enabled, `ReviewScreen`'s Confirm button is no longer blocked by a foul — the arrangement submits as-is and scores as the existing automatic foul loss (-3 against every valid opponent). Default (unchecked) behavior — Confirm blocked on foul — is unchanged.
 - The setting carries forward through "Play Again" (reuses the same value for the next round), but resets to the default (off) when continuing a previously saved game, since saved games don't record this setting.
-- When the toggle is on and the arrangement is fouled, `ReviewScreen` no longer shows the "Foul" validation message at all — since submission is allowed regardless, the warning was just noise at that point.
-- 4 new component tests (`Home.test.tsx`, `ReviewScreen.test.tsx`) covering both the default-blocked and toggle-enabled paths.
+- When the toggle is on and the arrangement is fouled, neither `ArrangementScreen` nor `ReviewScreen` show the "Foul" validation message anymore — since submission is allowed regardless, the warning was just noise at that point.
+- 5 new component tests (`Home.test.tsx`, `ReviewScreen.test.tsx`, `ArrangementScreen.test.tsx`) covering both the default-blocked and toggle-enabled paths.
 
 ## [0.11.0] - 2026-07-31
 

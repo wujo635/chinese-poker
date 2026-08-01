@@ -102,6 +102,7 @@ function App() {
           <PlayerDashboard opponents={game.players.slice(1)} />
           <ArrangementScreen
             arrangement={arrangement}
+            allowInvalidSubmissions={allowInvalidSubmissions}
             onChange={setArrangement}
             onReview={() => setView('review')}
             onSaveExit={handleSaveExit}

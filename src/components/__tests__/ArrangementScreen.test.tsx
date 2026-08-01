@@ -6,12 +6,18 @@ import type { Card } from '../../types';
 
 const c = (suit: Card['suit'], rank: Card['rank'], value: number): Card => ({ suit, rank, value });
 
-function renderScreen(arrangement: ArrangementState) {
+function renderScreen(arrangement: ArrangementState, allowInvalidSubmissions = false) {
   const onChange = vi.fn();
   const onReview = vi.fn();
   const onSaveExit = vi.fn();
   render(
-    <ArrangementScreen arrangement={arrangement} onChange={onChange} onReview={onReview} onSaveExit={onSaveExit} />,
+    <ArrangementScreen
+      arrangement={arrangement}
+      allowInvalidSubmissions={allowInvalidSubmissions}
+      onChange={onChange}
+      onReview={onReview}
+      onSaveExit={onSaveExit}
+    />,
   );
   return { onChange, onReview, onSaveExit };
 }
@@ -77,6 +83,20 @@ describe('ArrangementScreen', () => {
       back: [c('spades', 'K', 13), c('hearts', 'K', 13), c('diamonds', 'K', 13), c('clubs', 'K', 13), c('spades', '2', 2)],
     });
     expect(screen.getByText(/foul/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Review' })).toBeEnabled();
+  });
+
+  it('hides the foul message when invalid submissions are allowed', () => {
+    renderScreen(
+      {
+        hand: [],
+        front: [c('spades', 'A', 14), c('hearts', 'A', 14), c('diamonds', 'A', 14)],
+        middle: [c('clubs', '2', 2), c('spades', '3', 3), c('hearts', '4', 4), c('diamonds', '6', 6), c('clubs', '9', 9)],
+        back: [c('spades', 'K', 13), c('hearts', 'K', 13), c('diamonds', 'K', 13), c('clubs', 'K', 13), c('spades', '2', 2)],
+      },
+      true,
+    );
+    expect(screen.queryByText(/foul/i)).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Review' })).toBeEnabled();
   });
 
