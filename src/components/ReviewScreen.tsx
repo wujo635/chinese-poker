@@ -9,11 +9,12 @@ interface ReviewScreenProps {
   front: Card[];
   middle: Card[];
   back: Card[];
+  allowInvalidSubmissions: boolean;
   onBack: () => void;
   onConfirm: () => void;
 }
 
-export function ReviewScreen({ front, middle, back, onBack, onConfirm }: ReviewScreenProps) {
+export function ReviewScreen({ front, middle, back, allowInvalidSubmissions, onBack, onConfirm }: ReviewScreenProps) {
   const validation = validateArrangement(front as FrontHand, middle as FiveCardHand, back as FiveCardHand);
 
   return (
@@ -29,7 +30,7 @@ export function ReviewScreen({ front, middle, back, onBack, onConfirm }: ReviewS
         <button type="button" onClick={onBack}>
           Back to Arranging
         </button>
-        <button type="button" onClick={onConfirm} disabled={!validation.isValid}>
+        <button type="button" onClick={onConfirm} disabled={!validation.isValid && !allowInvalidSubmissions}>
           Confirm
         </button>
       </div>

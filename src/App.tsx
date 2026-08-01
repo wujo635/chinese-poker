@@ -32,16 +32,18 @@ function App() {
   const [arrangement, setArrangement] = useState<ArrangementState | null>(null);
   const [view, setView] = useState<View>('home');
   const [savedGameId, setSavedGameId] = useState<string | null>(null);
+  const [allowInvalidSubmissions, setAllowInvalidSubmissions] = useState(false);
 
   useEffect(() => {
     const ids = listSavedGameIds();
     setSavedGameId(ids[0] ?? null);
   }, []);
 
-  function handleNewGame() {
+  function handleNewGame(allowInvalid: boolean) {
     const fresh = dealWithAiArrangements();
     setGame(fresh);
     setArrangement(emptyArrangement(fresh.players[0].hand));
+    setAllowInvalidSubmissions(allowInvalid);
     setView('arranging');
   }
 
@@ -51,6 +53,7 @@ function App() {
     if (!loaded) return;
     setGame(loaded);
     setArrangement(emptyArrangement(loaded.players[0].hand));
+    setAllowInvalidSubmissions(false);
     setView('arranging');
   }
 
@@ -111,13 +114,14 @@ function App() {
           front={arrangement.front}
           middle={arrangement.middle}
           back={arrangement.back}
+          allowInvalidSubmissions={allowInvalidSubmissions}
           onBack={() => setView('arranging')}
           onConfirm={handleConfirm}
         />
       )}
 
       {view === 'results' && game && (
-        <ResultsScreen game={game} onPlayAgain={handleNewGame} onHome={handleHome} />
+        <ResultsScreen game={game} onPlayAgain={() => handleNewGame(allowInvalidSubmissions)} onHome={handleHome} />
       )}
     </div>
   );
