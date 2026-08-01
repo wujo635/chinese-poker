@@ -5,6 +5,13 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0] - 2026-07-31
+
+### Added
+- Hand tray in `ArrangementScreen` now displays cards sorted (descending by value, then suit ♠>♥>♣>♦) via the existing `compareCards()` instead of dealt order.
+- "Auto-Place" button in `ArrangementScreen`: one click re-arranges the entire hand (including any already-placed cards) using the existing `generateAIArrangement()`, the same greedy strongest-back-then-middle strategy used for AI opponents.
+- 2 new component tests covering hand sort order and Auto-Place behavior.
+
 ## [0.8.0] - 2026-07-31
 
 ### Changed
