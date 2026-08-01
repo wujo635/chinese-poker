@@ -127,7 +127,7 @@ describe('resolveRound', () => {
     expect(state.players[1].score).toBeLessThan(0);
   });
 
-  it('auto-loses -6 for a fouled player against a valid opponent', () => {
+  it('auto-loses -3 for a fouled player against a valid opponent', () => {
     let state = buildTwoPlayerState();
     state.players[0] = { ...state.players[0], isValid: false, arrangement: null };
     state.players[1] = {
@@ -141,8 +141,8 @@ describe('resolveRound', () => {
     };
 
     state = resolveRound(state);
-    expect(state.players[0].score).toBe(-6);
-    expect(state.players[1].score).toBe(6);
+    expect(state.players[0].score).toBe(-3);
+    expect(state.players[1].score).toBe(3);
   });
 });
 

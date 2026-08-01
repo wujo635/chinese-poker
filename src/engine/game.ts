@@ -109,14 +109,14 @@ function scorePairwise(a: Player, b: Player): [RoundResult, RoundResult] {
   }
   if (aFouled) {
     return [
-      { playerId: a.id, opponentId: b.id, frontResult: 'loss', middleResult: 'loss', backResult: 'loss', roundScore: -6 },
-      { playerId: b.id, opponentId: a.id, frontResult: 'win', middleResult: 'win', backResult: 'win', roundScore: 6 },
+      { playerId: a.id, opponentId: b.id, frontResult: 'loss', middleResult: 'loss', backResult: 'loss', roundScore: -3 },
+      { playerId: b.id, opponentId: a.id, frontResult: 'win', middleResult: 'win', backResult: 'win', roundScore: 3 },
     ];
   }
   if (bFouled) {
     return [
-      { playerId: a.id, opponentId: b.id, frontResult: 'win', middleResult: 'win', backResult: 'win', roundScore: 6 },
-      { playerId: b.id, opponentId: a.id, frontResult: 'loss', middleResult: 'loss', backResult: 'loss', roundScore: -6 },
+      { playerId: a.id, opponentId: b.id, frontResult: 'win', middleResult: 'win', backResult: 'win', roundScore: 3 },
+      { playerId: b.id, opponentId: a.id, frontResult: 'loss', middleResult: 'loss', backResult: 'loss', roundScore: -3 },
     ];
   }
 
