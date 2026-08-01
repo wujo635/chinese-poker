@@ -5,6 +5,15 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.0] - 2026-08-01
+
+### Removed
+- `ReviewScreen` — the separate pre-confirm review step. With the "allow invalid submissions" toggle already handling the foul case explicitly, the extra "one last look" screen was judged unnecessary and had become a near-duplicate of `ArrangementScreen`'s read-only state.
+
+### Changed
+- `ArrangementScreen`'s "Review" button is now "Confirm" and submits the round directly. It's disabled while the arrangement is incomplete, and disabled on a fouled arrangement unless "allow invalid submissions" is on — previously Review was only gated by completeness, with foul-blocking enforced one screen later on Review's own Confirm button.
+- The app flow is now `home → arranging → results` (previously `home → arranging → review → results`).
+
 ## [0.12.0] - 2026-08-01
 
 ### Added

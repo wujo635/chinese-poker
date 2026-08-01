@@ -34,4 +34,18 @@ describe('App', () => {
     expect(screen.getByRole('button', { name: 'New Game' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Continue Saved Game' })).toBeInTheDocument();
   });
+
+  it('goes straight from arranging to results on Confirm, with no review step', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    // Enable the toggle so Confirm is guaranteed enabled regardless of whether
+    // Auto-Place's greedy strategy happens to foul on this particular deal.
+    await user.click(screen.getByRole('checkbox'));
+    await user.click(screen.getByRole('button', { name: 'New Game' }));
+    await user.click(screen.getByRole('button', { name: 'Auto-Place' }));
+    await user.click(screen.getByRole('button', { name: 'Confirm' }));
+
+    expect(screen.getByRole('heading', { name: 'Round Results' })).toBeInTheDocument();
+  });
 });

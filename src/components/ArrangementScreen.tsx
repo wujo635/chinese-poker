@@ -20,7 +20,7 @@ interface ArrangementScreenProps {
   arrangement: ArrangementState;
   allowInvalidSubmissions: boolean;
   onChange: (next: ArrangementState) => void;
-  onReview: () => void;
+  onConfirm: () => void;
   onSaveExit: () => void;
 }
 
@@ -35,7 +35,7 @@ export function ArrangementScreen({
   arrangement,
   allowInvalidSubmissions,
   onChange,
-  onReview,
+  onConfirm,
   onSaveExit,
 }: ArrangementScreenProps) {
   const [selected, setSelected] = useState<Card | null>(null);
@@ -157,8 +157,12 @@ export function ArrangementScreen({
         <button type="button" onClick={onSaveExit}>
           Save &amp; Exit
         </button>
-        <button type="button" onClick={onReview} disabled={!isComplete}>
-          Review
+        <button
+          type="button"
+          onClick={onConfirm}
+          disabled={!isComplete || (!allowInvalidSubmissions && !validation!.isValid)}
+        >
+          Confirm
         </button>
       </div>
     </div>

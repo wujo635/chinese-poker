@@ -6,11 +6,10 @@ import { saveGameState, loadGameState, clearGameState, listSavedGameIds } from '
 import { Home } from './components/Home';
 import { PlayerDashboard } from './components/PlayerDashboard';
 import { ArrangementScreen, type ArrangementState } from './components/ArrangementScreen';
-import { ReviewScreen } from './components/ReviewScreen';
 import { ResultsScreen } from './components/ResultsScreen';
 import './App.css';
 
-type View = 'home' | 'arranging' | 'review' | 'results';
+type View = 'home' | 'arranging' | 'results';
 
 function emptyArrangement(hand: Card[]): ArrangementState {
   return { hand, front: [], middle: [], back: [] };
@@ -104,21 +103,10 @@ function App() {
             arrangement={arrangement}
             allowInvalidSubmissions={allowInvalidSubmissions}
             onChange={setArrangement}
-            onReview={() => setView('review')}
+            onConfirm={handleConfirm}
             onSaveExit={handleSaveExit}
           />
         </>
-      )}
-
-      {view === 'review' && arrangement && (
-        <ReviewScreen
-          front={arrangement.front}
-          middle={arrangement.middle}
-          back={arrangement.back}
-          allowInvalidSubmissions={allowInvalidSubmissions}
-          onBack={() => setView('arranging')}
-          onConfirm={handleConfirm}
-        />
       )}
 
       {view === 'results' && game && (
