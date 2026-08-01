@@ -79,4 +79,34 @@ describe('ArrangementScreen', () => {
     expect(screen.getByText(/foul/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Review' })).toBeEnabled();
   });
+
+  it('displays the hand tray sorted by value then suit, not dealt order', () => {
+    const hand = [c('clubs', '2', 2), c('spades', 'A', 14), c('hearts', '2', 2)];
+    renderScreen({ hand, front: [], middle: [], back: [] });
+
+    const handSection = screen.getByText(/Your Hand/).closest('div')!;
+    const cardButtons = handSection.querySelectorAll('.arrangement-screen__hand-cards button');
+    const labels = Array.from(cardButtons).map((btn) => btn.getAttribute('aria-label'));
+
+    expect(labels).toEqual(['A of spades', '2 of hearts', '2 of clubs']);
+  });
+
+  it('Auto-Place fills front/middle/back from the whole hand and empties the tray', async () => {
+    const user = userEvent.setup();
+    const hand = [
+      c('spades', 'A', 14), c('spades', 'K', 13), c('spades', 'Q', 12), c('spades', 'J', 11), c('spades', '10', 10),
+      c('hearts', 'A', 14), c('hearts', 'K', 13), c('hearts', 'Q', 12), c('hearts', 'J', 11), c('hearts', '9', 9),
+      c('diamonds', '2', 2), c('diamonds', '3', 3), c('diamonds', '4', 4),
+    ];
+    const { onChange } = renderScreen({ hand, front: [], middle: [], back: [] });
+
+    await user.click(screen.getByRole('button', { name: 'Auto-Place' }));
+
+    expect(onChange).toHaveBeenCalledTimes(1);
+    const result = onChange.mock.calls[0][0] as ArrangementState;
+    expect(result.hand).toEqual([]);
+    expect(result.front).toHaveLength(3);
+    expect(result.middle).toHaveLength(5);
+    expect(result.back).toHaveLength(5);
+  });
 });

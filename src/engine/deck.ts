@@ -6,12 +6,12 @@ export const RANKS: Rank[] = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J',
 
 export const HAND_SIZE = 13;
 
-/** ♠ > ♥ > ♦ > ♣ */
+/** ♠ > ♥ > ♣ > ♦ */
 export const SUIT_VALUE: Record<Suit, number> = {
   spades: 4,
   hearts: 3,
-  diamonds: 2,
-  clubs: 1,
+  clubs: 2,
+  diamonds: 1,
 };
 
 function rankValue(rank: Rank): number {

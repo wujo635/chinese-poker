@@ -5,6 +5,8 @@ import { HandZone } from './HandZone';
 import { ValidationStatus } from './ValidationStatus';
 import { identifyHandType } from '../engine/handRank';
 import { validateArrangement } from '../engine/validate';
+import { compareCards } from '../engine/deck';
+import { generateAIArrangement } from '../engine/ai';
 import './ArrangementScreen.css';
 
 export interface ArrangementState {
@@ -62,6 +64,15 @@ export function ArrangementScreen({ arrangement, onChange, onReview, onSaveExit 
     setSelected(null);
   }
 
+  function handleAutoPlace() {
+    const fullHand = [...hand, ...front, ...middle, ...back];
+    const { front: newFront, middle: newMiddle, back: newBack } = generateAIArrangement(fullHand);
+    onChange({ hand: [], front: newFront, middle: newMiddle, back: newBack });
+    setSelected(null);
+  }
+
+  const sortedHand = [...hand].sort((a, b) => compareCards(b, a));
+
   const isComplete = front.length === 3 && middle.length === 5 && back.length === 5;
   const validation = isComplete
     ? validateArrangement(front as FrontHand, middle as FiveCardHand, back as FiveCardHand)
@@ -72,7 +83,7 @@ export function ArrangementScreen({ arrangement, onChange, onReview, onSaveExit 
       <div className="arrangement-screen__hand">
         <h2>Your Hand ({hand.length})</h2>
         <div className="arrangement-screen__hand-cards">
-          {hand.map((card) => (
+          {sortedHand.map((card) => (
             <CardView
               key={cardKey(card)}
               card={card}
@@ -130,6 +141,9 @@ export function ArrangementScreen({ arrangement, onChange, onReview, onSaveExit 
           disabled={front.length === 0 && middle.length === 0 && back.length === 0}
         >
           Reset
+        </button>
+        <button type="button" onClick={handleAutoPlace}>
+          Auto-Place
         </button>
         <button type="button" onClick={onSaveExit}>
           Save &amp; Exit
