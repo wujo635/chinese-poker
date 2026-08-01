@@ -6,14 +6,20 @@ import type { Card } from '../../types';
 
 const c = (suit: Card['suit'], rank: Card['rank'], value: number): Card => ({ suit, rank, value });
 
-function renderScreen(arrangement: ArrangementState) {
+function renderScreen(arrangement: ArrangementState, allowInvalidSubmissions = false) {
   const onChange = vi.fn();
-  const onReview = vi.fn();
+  const onConfirm = vi.fn();
   const onSaveExit = vi.fn();
-  render(
-    <ArrangementScreen arrangement={arrangement} onChange={onChange} onReview={onReview} onSaveExit={onSaveExit} />,
+  const { unmount } = render(
+    <ArrangementScreen
+      arrangement={arrangement}
+      allowInvalidSubmissions={allowInvalidSubmissions}
+      onChange={onChange}
+      onConfirm={onConfirm}
+      onSaveExit={onSaveExit}
+    />,
   );
-  return { onChange, onReview, onSaveExit };
+  return { onChange, onConfirm, onSaveExit, unmount };
 }
 
 describe('ArrangementScreen', () => {
@@ -56,9 +62,10 @@ describe('ArrangementScreen', () => {
       back: [],
     });
     expect(screen.getByText(/place all 13 cards/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Confirm' })).toBeDisabled();
   });
 
-  it('shows a valid status and enables Review once back > middle > front', () => {
+  it('shows a valid status and enables Confirm once back > middle > front', () => {
     renderScreen({
       hand: [],
       front: [c('spades', '2', 2), c('hearts', '2', 2), c('diamonds', '5', 5)],
@@ -66,10 +73,10 @@ describe('ArrangementScreen', () => {
       back: [c('spades', 'A', 14), c('hearts', 'A', 14), c('diamonds', 'A', 14), c('clubs', 'A', 14), c('spades', '9', 9)],
     });
     expect(screen.getByText(/valid arrangement/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Review' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Confirm' })).toBeEnabled();
   });
 
-  it('shows a foul message when middle does not beat front', () => {
+  it('shows a foul message and disables Confirm when middle does not beat front', () => {
     renderScreen({
       hand: [],
       front: [c('spades', 'A', 14), c('hearts', 'A', 14), c('diamonds', 'A', 14)],
@@ -77,7 +84,58 @@ describe('ArrangementScreen', () => {
       back: [c('spades', 'K', 13), c('hearts', 'K', 13), c('diamonds', 'K', 13), c('clubs', 'K', 13), c('spades', '2', 2)],
     });
     expect(screen.getByText(/foul/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Review' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Confirm' })).toBeDisabled();
+  });
+
+  it('enables Confirm on a fouled arrangement once invalid submissions are allowed', async () => {
+    const user = userEvent.setup();
+    const { onConfirm } = renderScreen(
+      {
+        hand: [],
+        front: [c('spades', 'A', 14), c('hearts', 'A', 14), c('diamonds', 'A', 14)],
+        middle: [c('clubs', '2', 2), c('spades', '3', 3), c('hearts', '4', 4), c('diamonds', '6', 6), c('clubs', '9', 9)],
+        back: [c('spades', 'K', 13), c('hearts', 'K', 13), c('diamonds', 'K', 13), c('clubs', 'K', 13), c('spades', '2', 2)],
+      },
+      true,
+    );
+
+    const confirmButton = screen.getByRole('button', { name: 'Confirm' });
+    expect(confirmButton).toBeEnabled();
+
+    await user.click(confirmButton);
+    expect(onConfirm).toHaveBeenCalled();
+  });
+
+  it('hides all validation status messages once invalid submissions are allowed', () => {
+    const foulArrangement = {
+      hand: [],
+      front: [c('spades', 'A', 14), c('hearts', 'A', 14), c('diamonds', 'A', 14)],
+      middle: [c('clubs', '2', 2), c('spades', '3', 3), c('hearts', '4', 4), c('diamonds', '6', 6), c('clubs', '9', 9)],
+      back: [c('spades', 'K', 13), c('hearts', 'K', 13), c('diamonds', 'K', 13), c('clubs', 'K', 13), c('spades', '2', 2)],
+    };
+    const { unmount } = renderScreen(foulArrangement, true);
+    expect(screen.queryByText(/foul/i)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Confirm' })).toBeEnabled();
+    unmount();
+
+    const validArrangement = {
+      hand: [],
+      front: [c('spades', '2', 2), c('hearts', '2', 2), c('diamonds', '5', 5)],
+      middle: [c('clubs', '8', 8), c('spades', '8', 8), c('hearts', '3', 3), c('diamonds', '4', 4), c('clubs', '9', 9)],
+      back: [c('spades', 'A', 14), c('hearts', 'A', 14), c('diamonds', 'A', 14), c('clubs', 'A', 14), c('spades', '9', 9)],
+    };
+    const { unmount: unmount2 } = renderScreen(validArrangement, true);
+    expect(screen.queryByText(/valid arrangement/i)).not.toBeInTheDocument();
+    unmount2();
+
+    const incompleteArrangement = {
+      hand: [c('clubs', '2', 2)],
+      front: [c('spades', 'A', 14), c('hearts', 'A', 14), c('diamonds', 'A', 14)],
+      middle: [],
+      back: [],
+    };
+    renderScreen(incompleteArrangement, true);
+    expect(screen.queryByText(/place all 13 cards/i)).not.toBeInTheDocument();
   });
 
   it('displays the hand tray sorted by value then suit, not dealt order', () => {
@@ -108,5 +166,18 @@ describe('ArrangementScreen', () => {
     expect(result.front).toHaveLength(3);
     expect(result.middle).toHaveLength(5);
     expect(result.back).toHaveLength(5);
+  });
+
+  it('calls onConfirm when Confirm is clicked on a valid arrangement', async () => {
+    const user = userEvent.setup();
+    const { onConfirm } = renderScreen({
+      hand: [],
+      front: [c('spades', '2', 2), c('hearts', '2', 2), c('diamonds', '5', 5)],
+      middle: [c('clubs', '8', 8), c('spades', '8', 8), c('hearts', '3', 3), c('diamonds', '4', 4), c('clubs', '9', 9)],
+      back: [c('spades', 'A', 14), c('hearts', 'A', 14), c('diamonds', 'A', 14), c('clubs', 'A', 14), c('spades', '9', 9)],
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Confirm' }));
+    expect(onConfirm).toHaveBeenCalled();
   });
 });

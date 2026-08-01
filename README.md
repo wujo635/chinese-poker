@@ -8,6 +8,7 @@ A web app for Chinese Poker: deal 13 cards, arrange them into front (3), middle 
 - Hand tray sorted by rank/suit, plus a one-click "Auto-Place" suggestion
 - 3 AI opponents that arrange their own hands automatically
 - Round scoring: each hand is worth points based on the winning hand's strength (see below), automatic -3 foul loss
+- Optional "allow invalid submissions" toggle on Home — turn off foul-blocking so a fouled arrangement can still be submitted (and auto-loses as usual)
 - Results screen with matchup breakdown, standings, and all hands revealed
 - Save & Exit / Continue Saved Game via browser `localStorage`
 

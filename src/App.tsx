@@ -6,11 +6,10 @@ import { saveGameState, loadGameState, clearGameState, listSavedGameIds } from '
 import { Home } from './components/Home';
 import { PlayerDashboard } from './components/PlayerDashboard';
 import { ArrangementScreen, type ArrangementState } from './components/ArrangementScreen';
-import { ReviewScreen } from './components/ReviewScreen';
 import { ResultsScreen } from './components/ResultsScreen';
 import './App.css';
 
-type View = 'home' | 'arranging' | 'review' | 'results';
+type View = 'home' | 'arranging' | 'results';
 
 function emptyArrangement(hand: Card[]): ArrangementState {
   return { hand, front: [], middle: [], back: [] };
@@ -32,16 +31,18 @@ function App() {
   const [arrangement, setArrangement] = useState<ArrangementState | null>(null);
   const [view, setView] = useState<View>('home');
   const [savedGameId, setSavedGameId] = useState<string | null>(null);
+  const [allowInvalidSubmissions, setAllowInvalidSubmissions] = useState(false);
 
   useEffect(() => {
     const ids = listSavedGameIds();
     setSavedGameId(ids[0] ?? null);
   }, []);
 
-  function handleNewGame() {
+  function handleNewGame(allowInvalid: boolean) {
     const fresh = dealWithAiArrangements();
     setGame(fresh);
     setArrangement(emptyArrangement(fresh.players[0].hand));
+    setAllowInvalidSubmissions(allowInvalid);
     setView('arranging');
   }
 
@@ -51,6 +52,7 @@ function App() {
     if (!loaded) return;
     setGame(loaded);
     setArrangement(emptyArrangement(loaded.players[0].hand));
+    setAllowInvalidSubmissions(false);
     setView('arranging');
   }
 
@@ -99,25 +101,16 @@ function App() {
           <PlayerDashboard opponents={game.players.slice(1)} />
           <ArrangementScreen
             arrangement={arrangement}
+            allowInvalidSubmissions={allowInvalidSubmissions}
             onChange={setArrangement}
-            onReview={() => setView('review')}
+            onConfirm={handleConfirm}
             onSaveExit={handleSaveExit}
           />
         </>
       )}
 
-      {view === 'review' && arrangement && (
-        <ReviewScreen
-          front={arrangement.front}
-          middle={arrangement.middle}
-          back={arrangement.back}
-          onBack={() => setView('arranging')}
-          onConfirm={handleConfirm}
-        />
-      )}
-
       {view === 'results' && game && (
-        <ResultsScreen game={game} onPlayAgain={handleNewGame} onHome={handleHome} />
+        <ResultsScreen game={game} onPlayAgain={() => handleNewGame(allowInvalidSubmissions)} onHome={handleHome} />
       )}
     </div>
   );

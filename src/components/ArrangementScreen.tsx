@@ -18,8 +18,9 @@ export interface ArrangementState {
 
 interface ArrangementScreenProps {
   arrangement: ArrangementState;
+  allowInvalidSubmissions: boolean;
   onChange: (next: ArrangementState) => void;
-  onReview: () => void;
+  onConfirm: () => void;
   onSaveExit: () => void;
 }
 
@@ -30,7 +31,13 @@ function cardKey(card: Card): string {
   return `${card.suit}-${card.rank}`;
 }
 
-export function ArrangementScreen({ arrangement, onChange, onReview, onSaveExit }: ArrangementScreenProps) {
+export function ArrangementScreen({
+  arrangement,
+  allowInvalidSubmissions,
+  onChange,
+  onConfirm,
+  onSaveExit,
+}: ArrangementScreenProps) {
   const [selected, setSelected] = useState<Card | null>(null);
   const { hand, front, middle, back } = arrangement;
 
@@ -129,10 +136,12 @@ export function ArrangementScreen({ arrangement, onChange, onReview, onSaveExit 
         />
       </div>
 
-      <ValidationStatus
-        status={!isComplete ? 'incomplete' : validation!.isValid ? 'valid' : 'invalid'}
-        foulReason={validation?.foulReason}
-      />
+      {!allowInvalidSubmissions && (
+        <ValidationStatus
+          status={!isComplete ? 'incomplete' : validation!.isValid ? 'valid' : 'invalid'}
+          foulReason={validation?.foulReason}
+        />
+      )}
 
       <div className="arrangement-screen__actions">
         <button
@@ -148,8 +157,12 @@ export function ArrangementScreen({ arrangement, onChange, onReview, onSaveExit 
         <button type="button" onClick={onSaveExit}>
           Save &amp; Exit
         </button>
-        <button type="button" onClick={onReview} disabled={!isComplete}>
-          Review
+        <button
+          type="button"
+          onClick={onConfirm}
+          disabled={!isComplete || (!allowInvalidSubmissions && !validation!.isValid)}
+        >
+          Confirm
         </button>
       </div>
     </div>

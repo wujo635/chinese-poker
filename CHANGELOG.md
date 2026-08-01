@@ -5,6 +5,23 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.0] - 2026-08-01
+
+### Removed
+- `ReviewScreen` — the separate pre-confirm review step. With the "allow invalid submissions" toggle already handling the foul case explicitly, the extra "one last look" screen was judged unnecessary and had become a near-duplicate of `ArrangementScreen`'s read-only state.
+
+### Changed
+- `ArrangementScreen`'s "Review" button is now "Confirm" and submits the round directly. It's disabled while the arrangement is incomplete, and disabled on a fouled arrangement unless "allow invalid submissions" is on — previously Review was only gated by completeness, with foul-blocking enforced one screen later on Review's own Confirm button.
+- The app flow is now `home → arranging → results` (previously `home → arranging → review → results`).
+
+## [0.12.0] - 2026-08-01
+
+### Added
+- New Home screen option: "Allow submitting an invalid arrangement" checkbox (default off). When enabled, `ReviewScreen`'s Confirm button is no longer blocked by a foul — the arrangement submits as-is and scores as the existing automatic foul loss (-3 against every valid opponent). Default (unchecked) behavior — Confirm blocked on foul — is unchanged.
+- The setting carries forward through "Play Again" (reuses the same value for the next round), but resets to the default (off) when continuing a previously saved game, since saved games don't record this setting.
+- Simplified further: when the toggle is on, `ValidationStatus` doesn't render at all on `ArrangementScreen`/`ReviewScreen` — not just the foul message, but "Valid arrangement" and "Place all 13 cards" too, since none of it is actionable once foul-blocking is off.
+- 6 new component tests (`Home.test.tsx`, `ReviewScreen.test.tsx`, `ArrangementScreen.test.tsx`) covering both the default-blocked and toggle-enabled paths.
+
 ## [0.11.0] - 2026-07-31
 
 ### Changed
