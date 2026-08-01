@@ -5,6 +5,20 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.0] - 2026-07-31
+
+### Changed
+- Foul penalty reduced from a flat -6 to a flat -3 against every valid opponent, to better match the new per-hand point scale introduced in 0.10.0.
+
+## [0.10.0] - 2026-07-31
+
+### Changed
+- Replaced the flat ±1 per hand + ±6 scoop bonus with a new scoring method: each of front/middle/back is scored independently, and the point value depends on the *winning* hand's category on a zone-specific scale.
+  - **Front**: Three of a Kind = 3, anything else = 1
+  - **Middle**: Straight/Royal Flush = 10, Four of a Kind = 8, Full House = 2, anything else = 1
+  - **Back**: Straight/Royal Flush = 5, Four of a Kind = 4, anything else = 1
+  - The scoop bonus is removed entirely — a round score is just the sum of the three zone scores. Ties still score 0. A fouled player's penalty is unchanged (flat -6 against every valid opponent).
+
 ## [0.9.0] - 2026-07-31
 
 ### Added
