@@ -53,12 +53,20 @@ describe('ResultsScreen', () => {
     matchupScores.forEach((el) => expect(el.textContent).toBe('+6'));
   });
 
-  it('crowns the top scorer in the standings', () => {
+  it('shows a round-total summary line and no Standings heading', () => {
     const game = buildResolvedGame();
     render(<ResultsScreen game={game} onPlayAgain={vi.fn()} onHome={vi.fn()} />);
 
-    const youRow = screen.getByText(/👑 You \(You\)/);
-    expect(youRow).toBeInTheDocument();
+    expect(screen.getByText(/Your round total:/)).toBeInTheDocument();
+    expect(screen.getByText('+18')).toBeInTheDocument();
+    expect(screen.queryByText('Standings')).not.toBeInTheDocument();
+  });
+
+  it('marks the dealer\'s revealed hand as "(Dealer)" and "(You)" when the dealer is human', () => {
+    const game = buildResolvedGame();
+    render(<ResultsScreen game={game} onPlayAgain={vi.fn()} onHome={vi.fn()} />);
+
+    expect(screen.getByText('You (Dealer) (You)')).toBeInTheDocument();
   });
 
   it('renders each player\'s revealed hand with its hand type', () => {
@@ -67,5 +75,34 @@ describe('ResultsScreen', () => {
 
     expect(screen.getAllByText('Four of a Kind')).toHaveLength(1); // human's back
     expect(screen.getAllByText('Full House')).toHaveLength(3); // each bot's back
+  });
+});
+
+describe('ResultsScreen (Player mode, AI Dealer)', () => {
+  function buildPlayerModeGame(): GameState {
+    let state = initializeGame({
+      seats: [
+        { name: 'AI Dealer', type: 'ai' },
+        { name: 'You (Seat 1)', type: 'human' },
+        { name: 'Bot 2', type: 'ai' },
+        { name: 'You (Seat 2)', type: 'human' },
+      ],
+      dealerIndex: 0,
+    });
+    state = submitArrangement(state, 'player-0', strongArrangement.front, strongArrangement.middle, strongArrangement.back);
+    for (const id of ['player-1', 'player-2', 'player-3']) {
+      state = submitArrangement(state, id, weakArrangement.front, weakArrangement.middle, weakArrangement.back);
+    }
+    return resolveRound(state);
+  }
+
+  it('labels matchup rows with the AI dealer\'s name and marks human non-dealer seats "(You)"', () => {
+    const game = buildPlayerModeGame();
+    render(<ResultsScreen game={game} onPlayAgain={vi.fn()} onHome={vi.fn()} />);
+
+    expect(screen.getByText('AI Dealer vs You (Seat 1) (You)')).toBeInTheDocument();
+    expect(screen.getByText('AI Dealer vs Bot 2')).toBeInTheDocument();
+    expect(screen.getByText('AI Dealer vs You (Seat 2) (You)')).toBeInTheDocument();
+    expect(screen.getByText(/AI Dealer's round total:/)).toBeInTheDocument();
   });
 });

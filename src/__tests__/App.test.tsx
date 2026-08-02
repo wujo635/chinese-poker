@@ -48,4 +48,47 @@ describe('App', () => {
 
     expect(screen.getByRole('heading', { name: 'Round Results' })).toBeInTheDocument();
   });
+
+  it('arranges multiple human seats sequentially in Player mode, then reaches Results', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole('radio', { name: /Play vs AI Dealer/ }));
+    await user.click(screen.getByRole('radio', { name: 'Control 2 seats' }));
+    await user.click(screen.getByRole('checkbox')); // allow invalid submissions, avoids Auto-Place foul flakiness
+    await user.click(screen.getByRole('button', { name: 'New Game' }));
+
+    expect(screen.getByText('Arranging Seat 1 of 2')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Auto-Place' }));
+    await user.click(screen.getByRole('button', { name: 'Confirm' }));
+
+    // Still arranging (seat 2), with a fresh 13-card hand and updated progress text.
+    expect(screen.getByText('Your Hand (13)')).toBeInTheDocument();
+    expect(screen.getByText('Arranging Seat 2 of 2')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Auto-Place' }));
+    await user.click(screen.getByRole('button', { name: 'Confirm' }));
+
+    expect(screen.getByRole('heading', { name: 'Round Results' })).toBeInTheDocument();
+  });
+
+  it('resumes on the next unconfirmed seat after Save & Exit mid multi-seat arranging', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole('radio', { name: /Play vs AI Dealer/ }));
+    await user.click(screen.getByRole('radio', { name: 'Control 2 seats' }));
+    await user.click(screen.getByRole('checkbox')); // allow invalid submissions, avoids Auto-Place foul flakiness
+    await user.click(screen.getByRole('button', { name: 'New Game' }));
+
+    await user.click(screen.getByRole('button', { name: 'Auto-Place' }));
+    await user.click(screen.getByRole('button', { name: 'Confirm' }));
+    expect(screen.getByText('Arranging Seat 2 of 2')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Save & Exit' }));
+    await user.click(screen.getByRole('button', { name: 'Continue Saved Game' }));
+
+    // Resumes on seat 2, not seat 1 (whose confirmed arrangement stays locked in).
+    expect(screen.getByText('Arranging Seat 2 of 2')).toBeInTheDocument();
+  });
 });

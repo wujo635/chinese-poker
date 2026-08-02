@@ -1,12 +1,12 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { ArrangementScreen, type ArrangementState } from '../ArrangementScreen';
+import { ArrangementScreen, type ArrangementState, type SeatProgress } from '../ArrangementScreen';
 import type { Card } from '../../types';
 
 const c = (suit: Card['suit'], rank: Card['rank'], value: number): Card => ({ suit, rank, value });
 
-function renderScreen(arrangement: ArrangementState, allowInvalidSubmissions = false) {
+function renderScreen(arrangement: ArrangementState, allowInvalidSubmissions = false, seatProgress?: SeatProgress) {
   const onChange = vi.fn();
   const onConfirm = vi.fn();
   const onSaveExit = vi.fn();
@@ -14,6 +14,7 @@ function renderScreen(arrangement: ArrangementState, allowInvalidSubmissions = f
     <ArrangementScreen
       arrangement={arrangement}
       allowInvalidSubmissions={allowInvalidSubmissions}
+      seatProgress={seatProgress}
       onChange={onChange}
       onConfirm={onConfirm}
       onSaveExit={onSaveExit}
@@ -179,5 +180,18 @@ describe('ArrangementScreen', () => {
 
     await user.click(screen.getByRole('button', { name: 'Confirm' }));
     expect(onConfirm).toHaveBeenCalled();
+  });
+
+  it('shows "Arranging Seat X of Y" when seatProgress is provided with more than one total seat', () => {
+    renderScreen({ hand: [], front: [], middle: [], back: [] }, false, { current: 2, total: 3 });
+    expect(screen.getByText('Arranging Seat 2 of 3')).toBeInTheDocument();
+  });
+
+  it('renders no seat-progress text when seatProgress is omitted or total is 1', () => {
+    renderScreen({ hand: [], front: [], middle: [], back: [] });
+    expect(screen.queryByText(/Arranging Seat/)).not.toBeInTheDocument();
+
+    renderScreen({ hand: [], front: [], middle: [], back: [] }, false, { current: 1, total: 1 });
+    expect(screen.queryByText(/Arranging Seat/)).not.toBeInTheDocument();
   });
 });

@@ -21,6 +21,16 @@
   color: #444;
 }
 
+.home__mode,
+.home__seat-count {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
 .home__actions {
   display: flex;
   gap: 1rem;

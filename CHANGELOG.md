@@ -5,6 +5,20 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.15.0] - 2026-08-01
+
+### Added
+- Session mode selector on Home: **"Play as Dealer vs 3 AI"** (default, same as before) or **"Play vs AI Dealer"**, which reveals a picker to control 1, 2, or 3 non-dealer seats yourself (remaining seats are AI-controlled).
+- When controlling multiple seats, they're arranged **sequentially** — one full `ArrangementScreen` per seat, each showing an "Arranging Seat X of Y" progress indicator, before moving to the next.
+- `ResultsScreen` shows a one-line round-total summary (e.g. "Your round total: -6") above the per-opponent matchup rows.
+- `PlayerDashboard` marks the Dealer's seat with 🎩 and distinguishes an unarranged human seat ("Up Next") from an AI seat still arranging ("Arranging…").
+
+### Changed
+- `ResultsScreen`'s matchup rows and hand-reveal section are now derived from `game.dealerId` instead of assuming the human is always `players[0]` — works correctly whether the Dealer is human or AI, and whether there are 1-3 human seats.
+- **Removed the "Standings" ranking section** from `ResultsScreen` — with non-dealer seats never scoring against each other (since v0.14.0), a competitive ranking across all 4 players no longer means anything. Replaced by the round-total summary line plus the individual per-opponent rows.
+- "Play Again" now carries forward both the session mode/seat-count and the "allow invalid submissions" setting from the round just played.
+- "Continue Saved Game" resumes correctly mid-multi-seat-arranging: already-confirmed seats stay locked in, and the queue picks up on the next unconfirmed seat. In-progress card placement on the seat being actively arranged is still lost on resume (same pre-existing limitation as single-seat saves).
+
 ## [0.14.0] - 2026-08-01
 
 ### Fixed
