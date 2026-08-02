@@ -5,6 +5,18 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.14.0] - 2026-08-01
+
+### Fixed
+- `resolveRound` no longer scores AI opponents against each other. Previously it ran a full round-robin over all 4 players, so a player's score could swing based on matchups they weren't shown and couldn't control. It now formalizes a **Dealer** concept: every non-dealer player's hand is compared only against the Dealer's, never against each other. `GameState.results` now holds 3 pairings (6 entries) per round instead of 6 pairings (12 entries).
+
+### Added
+- `GameState.dealerId` — identifies which seat is the Dealer.
+- `initializeGame()` now takes a `{ seats, dealerIndex }` config instead of a plain name list, so seat type (human/AI) and dealer position can be specified explicitly. This is groundwork for an upcoming session-mode selector (play as Dealer vs. AI, or play vs. an AI Dealer) — not yet exposed in the UI this version.
+- `normalizeLegacyGameState()` — defaults `dealerId` to the first player for saves persisted before this field existed, so old "Continue Saved Game" saves keep working.
+
+This version is purely an engine/state-shape change; the visible app behavior (solo human vs. 3 AI) is unchanged.
+
 ## [0.13.0] - 2026-08-01
 
 ### Removed

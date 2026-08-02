@@ -6,7 +6,17 @@ import { generateAIArrangement } from '../../engine/ai';
 
 describe('PlayerDashboard', () => {
   it('shows each opponent name and "Locked In" once they have an arrangement', () => {
-    let state = dealRound(initializeGame(['You', 'Bot 1', 'Bot 2', 'Bot 3']));
+    let state = dealRound(
+      initializeGame({
+        seats: [
+          { name: 'You', type: 'human' },
+          { name: 'Bot 1', type: 'ai' },
+          { name: 'Bot 2', type: 'ai' },
+          { name: 'Bot 3', type: 'ai' },
+        ],
+        dealerIndex: 0,
+      }),
+    );
     const bot1 = state.players[1];
     const arrangement = generateAIArrangement(bot1.hand);
     state = submitArrangement(state, bot1.id, arrangement.front, arrangement.middle, arrangement.back);

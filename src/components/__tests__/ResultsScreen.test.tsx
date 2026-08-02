@@ -22,7 +22,15 @@ const weakArrangement = {
 };
 
 function buildResolvedGame(): GameState {
-  let state = initializeGame(['You', 'Bot 1', 'Bot 2', 'Bot 3']);
+  let state = initializeGame({
+    seats: [
+      { name: 'You', type: 'human' },
+      { name: 'Bot 1', type: 'ai' },
+      { name: 'Bot 2', type: 'ai' },
+      { name: 'Bot 3', type: 'ai' },
+    ],
+    dealerIndex: 0,
+  });
   state = submitArrangement(state, 'player-0', strongArrangement.front, strongArrangement.middle, strongArrangement.back);
   for (const id of ['player-1', 'player-2', 'player-3']) {
     state = submitArrangement(state, id, weakArrangement.front, weakArrangement.middle, weakArrangement.back);

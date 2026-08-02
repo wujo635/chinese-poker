@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { Card, FiveCardHand, FrontHand, GameState } from './types';
-import { initializeGame, dealRound, submitArrangement, resolveRound } from './engine/game';
+import { initializeGame, dealRound, submitArrangement, resolveRound, normalizeLegacyGameState } from './engine/game';
 import { generateAIArrangement } from './engine/ai';
 import { saveGameState, loadGameState, clearGameState, listSavedGameIds } from './engine/persistence';
 import { Home } from './components/Home';
@@ -17,7 +17,17 @@ function emptyArrangement(hand: Card[]): ArrangementState {
 
 /** Deals a fresh round and has every AI player lock in their arrangement immediately. */
 function dealWithAiArrangements(): GameState {
-  let state = dealRound(initializeGame(['You', 'Bot 1', 'Bot 2', 'Bot 3']));
+  let state = dealRound(
+    initializeGame({
+      seats: [
+        { name: 'You', type: 'human' },
+        { name: 'Bot 1', type: 'ai' },
+        { name: 'Bot 2', type: 'ai' },
+        { name: 'Bot 3', type: 'ai' },
+      ],
+      dealerIndex: 0,
+    }),
+  );
   for (const player of state.players) {
     if (player.type !== 'ai') continue;
     const arrangement = generateAIArrangement(player.hand);
@@ -50,8 +60,9 @@ function App() {
     if (!savedGameId) return;
     const loaded = loadGameState(savedGameId);
     if (!loaded) return;
-    setGame(loaded);
-    setArrangement(emptyArrangement(loaded.players[0].hand));
+    const normalized = normalizeLegacyGameState(loaded);
+    setGame(normalized);
+    setArrangement(emptyArrangement(normalized.players[0].hand));
     setAllowInvalidSubmissions(false);
     setView('arranging');
   }
