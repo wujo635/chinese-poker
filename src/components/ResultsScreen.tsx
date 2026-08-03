@@ -22,25 +22,35 @@ function formatScore(score: number): string {
 }
 
 export function ResultsScreen({ game, onPlayAgain, onHome }: ResultsScreenProps) {
-  const human = game.players[0];
-  const opponents = game.players.slice(1);
-  const topScore = Math.max(...game.players.map((p) => p.score));
+  const dealer = game.players.find((p) => p.id === game.dealerId)!;
+  const opponents = game.players.filter((p) => p.id !== dealer.id);
+  const isDealerHuman = dealer.type === 'human';
 
-  const humanMatchups = opponents.map((opponent) => ({
+  const dealerMatchups = opponents.map((opponent) => ({
     opponent,
-    result: game.results.find((r) => r.playerId === human.id && r.opponentId === opponent.id)!,
+    result: game.results.find((r) => r.playerId === dealer.id && r.opponentId === opponent.id)!,
   }));
 
-  const standings = [...game.players].sort((a, b) => b.score - a.score);
+  const roundTotal = dealerMatchups.reduce((sum, { result }) => sum + result.roundScore, 0);
 
   return (
     <div className="results-screen">
       <h2>Round Results</h2>
 
+      <p className="results-screen__summary">
+        {isDealerHuman ? 'Your' : `${dealer.name}'s`} round total:{' '}
+        <span className={`results-screen__summary-score results-screen__summary-score--${scoreClass(roundTotal)}`}>
+          {formatScore(roundTotal)}
+        </span>
+      </p>
+
       <div className="results-screen__matchups">
-        {humanMatchups.map(({ opponent, result }) => (
+        {dealerMatchups.map(({ opponent, result }) => (
           <div key={opponent.id} className="matchup-row">
-            <span className="matchup-row__name">You vs {opponent.name}</span>
+            <span className="matchup-row__name">
+              {isDealerHuman ? 'You' : dealer.name} vs {opponent.name}
+              {opponent.type === 'human' ? ' (You)' : ''}
+            </span>
             <span className="matchup-row__cell">
               {RESULT_ICON[result.frontResult]} Front
             </span>
@@ -57,29 +67,13 @@ export function ResultsScreen({ game, onPlayAgain, onHome }: ResultsScreenProps)
         ))}
       </div>
 
-      <div className="results-screen__standings">
-        <h3>Standings</h3>
-        {standings.map((p) => (
-          <div key={p.id} className="standings-row">
-            <span>
-              {p.score === topScore ? '👑 ' : ''}
-              {p.name}
-              {p.id === human.id ? ' (You)' : ''}
-              {!p.isValid ? ' — Foul' : ''}
-            </span>
-            <span className={`standings-row__score standings-row__score--${scoreClass(p.score)}`}>
-              {formatScore(p.score)}
-            </span>
-          </div>
-        ))}
-      </div>
-
       <div className="results-screen__hands">
         {game.players.map((p) => (
           <div key={p.id} className="results-screen__player-hands">
             <h4>
               {p.name}
-              {p.id === human.id ? ' (You)' : ''}
+              {p.id === dealer.id ? ' (Dealer)' : ''}
+              {p.type === 'human' ? ' (You)' : ''}
               {!p.isValid ? ' — Foul' : ''}
             </h4>
             {p.arrangement && (

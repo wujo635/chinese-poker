@@ -16,9 +16,15 @@ export interface ArrangementState {
   back: Card[];
 }
 
+export interface SeatProgress {
+  current: number;
+  total: number;
+}
+
 interface ArrangementScreenProps {
   arrangement: ArrangementState;
   allowInvalidSubmissions: boolean;
+  seatProgress?: SeatProgress;
   onChange: (next: ArrangementState) => void;
   onConfirm: () => void;
   onSaveExit: () => void;
@@ -34,6 +40,7 @@ function cardKey(card: Card): string {
 export function ArrangementScreen({
   arrangement,
   allowInvalidSubmissions,
+  seatProgress,
   onChange,
   onConfirm,
   onSaveExit,
@@ -89,6 +96,11 @@ export function ArrangementScreen({
     <div className="arrangement-screen">
       <div className="arrangement-screen__hand">
         <h2>Your Hand ({hand.length})</h2>
+        {seatProgress && seatProgress.total > 1 && (
+          <p className="arrangement-screen__seat-progress">
+            Arranging Seat {seatProgress.current} of {seatProgress.total}
+          </p>
+        )}
         <div className="arrangement-screen__hand-cards">
           {sortedHand.map((card) => (
             <CardView

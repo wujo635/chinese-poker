@@ -13,6 +13,13 @@
   min-height: 4.2rem;
 }
 
+.arrangement-screen__seat-progress {
+  margin: 0.2rem 0 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #555;
+}
+
 .arrangement-screen__hint {
   margin-top: 0.4rem;
   font-size: 0.85rem;

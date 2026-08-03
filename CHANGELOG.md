@@ -5,6 +5,32 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.15.0] - 2026-08-01
+
+### Added
+- Session mode selector on Home: **"Play as Dealer vs 3 AI"** (default, same as before) or **"Play vs AI Dealer"**, which reveals a picker to control 1, 2, or 3 non-dealer seats yourself (remaining seats are AI-controlled).
+- When controlling multiple seats, they're arranged **sequentially** — one full `ArrangementScreen` per seat, each showing an "Arranging Seat X of Y" progress indicator, before moving to the next.
+- `ResultsScreen` shows a one-line round-total summary (e.g. "Your round total: -6") above the per-opponent matchup rows.
+- `PlayerDashboard` marks the Dealer's seat with 🎩 and distinguishes an unarranged human seat ("Up Next") from an AI seat still arranging ("Arranging…").
+
+### Changed
+- `ResultsScreen`'s matchup rows and hand-reveal section are now derived from `game.dealerId` instead of assuming the human is always `players[0]` — works correctly whether the Dealer is human or AI, and whether there are 1-3 human seats.
+- **Removed the "Standings" ranking section** from `ResultsScreen` — with non-dealer seats never scoring against each other (since v0.14.0), a competitive ranking across all 4 players no longer means anything. Replaced by the round-total summary line plus the individual per-opponent rows.
+- "Play Again" now carries forward both the session mode/seat-count and the "allow invalid submissions" setting from the round just played.
+- "Continue Saved Game" resumes correctly mid-multi-seat-arranging: already-confirmed seats stay locked in, and the queue picks up on the next unconfirmed seat. In-progress card placement on the seat being actively arranged is still lost on resume (same pre-existing limitation as single-seat saves).
+
+## [0.14.0] - 2026-08-01
+
+### Fixed
+- `resolveRound` no longer scores AI opponents against each other. Previously it ran a full round-robin over all 4 players, so a player's score could swing based on matchups they weren't shown and couldn't control. It now formalizes a **Dealer** concept: every non-dealer player's hand is compared only against the Dealer's, never against each other. `GameState.results` now holds 3 pairings (6 entries) per round instead of 6 pairings (12 entries).
+
+### Added
+- `GameState.dealerId` — identifies which seat is the Dealer.
+- `initializeGame()` now takes a `{ seats, dealerIndex }` config instead of a plain name list, so seat type (human/AI) and dealer position can be specified explicitly. This is groundwork for an upcoming session-mode selector (play as Dealer vs. AI, or play vs. an AI Dealer) — not yet exposed in the UI this version.
+- `normalizeLegacyGameState()` — defaults `dealerId` to the first player for saves persisted before this field existed, so old "Continue Saved Game" saves keep working.
+
+This version is purely an engine/state-shape change; the visible app behavior (solo human vs. 3 AI) is unchanged.
+
 ## [0.13.0] - 2026-08-01
 
 ### Removed

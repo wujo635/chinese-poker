@@ -1,14 +1,24 @@
-import type { Card, FiveCardHand, FrontHand, GameState, Player, RoundResult, MatchupResult } from '../types';
+import type { Card, FiveCardHand, FrontHand, GameState, Player, PlayerType, RoundResult, MatchupResult } from '../types';
 import { createDeck, dealCards, shuffleDeck } from './deck';
 import { compareHands } from './compareHands';
 import { getHandStrength } from './handRank';
 import { validateArrangement } from './validate';
 
-export function initializeGame(playerNames: string[]): GameState {
-  const players: Player[] = playerNames.map((name, i) => ({
+export interface SeatConfig {
+  name: string;
+  type: PlayerType;
+}
+
+export interface InitGameConfig {
+  seats: SeatConfig[];
+  dealerIndex: number;
+}
+
+export function initializeGame(config: InitGameConfig): GameState {
+  const players: Player[] = config.seats.map((seat, i) => ({
     id: `player-${i}`,
-    name,
-    type: i === 0 ? 'human' : 'ai',
+    name: seat.name,
+    type: seat.type,
     hand: [],
     arrangement: null,
     isValid: false,
@@ -22,11 +32,23 @@ export function initializeGame(playerNames: string[]): GameState {
         : `game-${Date.now()}-${Math.random().toString(36).slice(2)}`,
     status: 'dealing',
     players,
+    dealerId: players[config.dealerIndex].id,
     currentPlayerIndex: 0,
     round: 0,
     results: [],
     history: [],
   };
+}
+
+/** True if the dealer seat is human-controlled (i.e. this is a "play as Dealer" session). */
+export function isDealerModeGame(state: GameState): boolean {
+  return state.players.find((p) => p.id === state.dealerId)?.type === 'human';
+}
+
+/** Defaults `dealerId` to the first player for saves persisted before the dealer concept existed. */
+export function normalizeLegacyGameState(state: GameState): GameState {
+  if (state.dealerId) return state;
+  return { ...state, dealerId: state.players[0]?.id };
 }
 
 /** Shuffles a fresh deck and deals 13 cards to each player, resetting arrangements. */
@@ -146,21 +168,25 @@ function scorePairwise(a: Player, b: Player): [RoundResult, RoundResult] {
 }
 
 /**
- * Compares every pair of players' hands and tallies scores. `results` holds one entry per
- * (player, opponent) pairing rather than one per player, since each player's total round
- * score is the sum of independent 1v1 matchups against every other player.
+ * Compares the Dealer's hand against every other player's hand independently. Non-dealer
+ * players never score against each other, only against the Dealer. `results` holds one entry
+ * per (player, opponent) pairing rather than one per player, so each player's total round
+ * score is the sum of their entries (always exactly one for a non-dealer, or one per opponent
+ * for the Dealer).
  */
 export function resolveRound(state: GameState): GameState {
+  const dealer = state.players.find((p) => p.id === state.dealerId);
+  if (!dealer) throw new Error('resolveRound: no player matches state.dealerId');
+
   const results: RoundResult[] = [];
   const scoreDelta = new Map<string, number>();
 
-  for (let i = 0; i < state.players.length; i++) {
-    for (let j = i + 1; j < state.players.length; j++) {
-      const [resultA, resultB] = scorePairwise(state.players[i], state.players[j]);
-      results.push(resultA, resultB);
-      scoreDelta.set(resultA.playerId, (scoreDelta.get(resultA.playerId) ?? 0) + resultA.roundScore);
-      scoreDelta.set(resultB.playerId, (scoreDelta.get(resultB.playerId) ?? 0) + resultB.roundScore);
-    }
+  for (const opponent of state.players) {
+    if (opponent.id === dealer.id) continue;
+    const [dealerResult, opponentResult] = scorePairwise(dealer, opponent);
+    results.push(dealerResult, opponentResult);
+    scoreDelta.set(dealerResult.playerId, (scoreDelta.get(dealerResult.playerId) ?? 0) + dealerResult.roundScore);
+    scoreDelta.set(opponentResult.playerId, (scoreDelta.get(opponentResult.playerId) ?? 0) + opponentResult.roundScore);
   }
 
   const players = state.players.map((p) => ({ ...p, score: p.score + (scoreDelta.get(p.id) ?? 0) }));

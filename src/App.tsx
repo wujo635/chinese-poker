@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import type { Card, FiveCardHand, FrontHand, GameState } from './types';
-import { initializeGame, dealRound, submitArrangement, resolveRound } from './engine/game';
+import type { InitGameConfig } from './engine/game';
+import { initializeGame, dealRound, submitArrangement, resolveRound, normalizeLegacyGameState } from './engine/game';
 import { generateAIArrangement } from './engine/ai';
 import { saveGameState, loadGameState, clearGameState, listSavedGameIds } from './engine/persistence';
-import { Home } from './components/Home';
+import { Home, type SessionConfig } from './components/Home';
 import { PlayerDashboard } from './components/PlayerDashboard';
 import { ArrangementScreen, type ArrangementState } from './components/ArrangementScreen';
 import { ResultsScreen } from './components/ResultsScreen';
@@ -15,9 +16,29 @@ function emptyArrangement(hand: Card[]): ArrangementState {
   return { hand, front: [], middle: [], back: [] };
 }
 
+function buildSeatConfig(config: SessionConfig): InitGameConfig {
+  if (config.mode === 'dealer') {
+    return {
+      seats: [
+        { name: 'You', type: 'human' },
+        { name: 'Bot 1', type: 'ai' },
+        { name: 'Bot 2', type: 'ai' },
+        { name: 'Bot 3', type: 'ai' },
+      ],
+      dealerIndex: 0,
+    };
+  }
+  const nonDealerSeats = [1, 2, 3].map((n) =>
+    n <= config.humanSeatCount
+      ? { name: `You (Seat ${n})`, type: 'human' as const }
+      : { name: `Bot ${n}`, type: 'ai' as const },
+  );
+  return { seats: [{ name: 'AI Dealer', type: 'ai' }, ...nonDealerSeats], dealerIndex: 0 };
+}
+
 /** Deals a fresh round and has every AI player lock in their arrangement immediately. */
-function dealWithAiArrangements(): GameState {
-  let state = dealRound(initializeGame(['You', 'Bot 1', 'Bot 2', 'Bot 3']));
+function dealWithAiArrangements(config: SessionConfig): GameState {
+  let state = dealRound(initializeGame(buildSeatConfig(config)));
   for (const player of state.players) {
     if (player.type !== 'ai') continue;
     const arrangement = generateAIArrangement(player.hand);
@@ -29,19 +50,27 @@ function dealWithAiArrangements(): GameState {
 function App() {
   const [game, setGame] = useState<GameState | null>(null);
   const [arrangement, setArrangement] = useState<ArrangementState | null>(null);
+  const [arrangingPlayerId, setArrangingPlayerId] = useState<string | null>(null);
+  const [pendingHumanIds, setPendingHumanIds] = useState<string[]>([]);
   const [view, setView] = useState<View>('home');
   const [savedGameId, setSavedGameId] = useState<string | null>(null);
   const [allowInvalidSubmissions, setAllowInvalidSubmissions] = useState(false);
+  const [sessionConfig, setSessionConfig] = useState<SessionConfig>({ mode: 'dealer', humanSeatCount: 1 });
 
   useEffect(() => {
     const ids = listSavedGameIds();
     setSavedGameId(ids[0] ?? null);
   }, []);
 
-  function handleNewGame(allowInvalid: boolean) {
-    const fresh = dealWithAiArrangements();
+  function handleNewGame(config: SessionConfig, allowInvalid: boolean) {
+    const fresh = dealWithAiArrangements(config);
+    const humanIds = fresh.players.filter((p) => p.type === 'human').map((p) => p.id);
+    const [first, ...rest] = humanIds;
     setGame(fresh);
-    setArrangement(emptyArrangement(fresh.players[0].hand));
+    setSessionConfig(config);
+    setArrangingPlayerId(first);
+    setArrangement(emptyArrangement(fresh.players.find((p) => p.id === first)!.hand));
+    setPendingHumanIds(rest);
     setAllowInvalidSubmissions(allowInvalid);
     setView('arranging');
   }
@@ -50,8 +79,15 @@ function App() {
     if (!savedGameId) return;
     const loaded = loadGameState(savedGameId);
     if (!loaded) return;
-    setGame(loaded);
-    setArrangement(emptyArrangement(loaded.players[0].hand));
+    const normalized = normalizeLegacyGameState(loaded);
+    const remainingHumanIds = normalized.players
+      .filter((p) => p.type === 'human' && p.arrangement === null)
+      .map((p) => p.id);
+    const [first, ...rest] = remainingHumanIds;
+    setGame(normalized);
+    setArrangingPlayerId(first ?? null);
+    setArrangement(first ? emptyArrangement(normalized.players.find((p) => p.id === first)!.hand) : null);
+    setPendingHumanIds(rest);
     setAllowInvalidSubmissions(false);
     setView('arranging');
   }
@@ -65,28 +101,46 @@ function App() {
   }
 
   function handleConfirm() {
-    if (!game || !arrangement) return;
+    if (!game || !arrangement || !arrangingPlayerId) return;
     let updated = submitArrangement(
       game,
-      game.players[0].id,
+      arrangingPlayerId,
       arrangement.front as FrontHand,
       arrangement.middle as FiveCardHand,
       arrangement.back as FiveCardHand,
     );
+
     if (updated.status === 'comparing') {
       updated = resolveRound(updated);
+      setGame(updated);
+      clearGameState(game.gameId);
+      setSavedGameId(null);
+      setArrangingPlayerId(null);
+      setPendingHumanIds([]);
+      setArrangement(null);
+      setView('results');
+      return;
     }
+
     setGame(updated);
-    clearGameState(game.gameId);
-    setSavedGameId(null);
-    setView('results');
+    const [next, ...rest] = pendingHumanIds;
+    setArrangingPlayerId(next);
+    setArrangement(emptyArrangement(updated.players.find((p) => p.id === next)!.hand));
+    setPendingHumanIds(rest);
   }
 
   function handleHome() {
     setGame(null);
     setArrangement(null);
+    setArrangingPlayerId(null);
+    setPendingHumanIds([]);
     setView('home');
   }
+
+  const seatProgress =
+    sessionConfig.humanSeatCount > 1
+      ? { current: sessionConfig.humanSeatCount - pendingHumanIds.length, total: sessionConfig.humanSeatCount }
+      : undefined;
 
   return (
     <div className="app">
@@ -96,12 +150,14 @@ function App() {
         <Home hasSavedGame={savedGameId !== null} onNewGame={handleNewGame} onContinue={handleContinue} />
       )}
 
-      {view === 'arranging' && arrangement && game && (
+      {view === 'arranging' && arrangement && game && arrangingPlayerId && (
         <>
-          <PlayerDashboard opponents={game.players.slice(1)} />
+          <PlayerDashboard players={game.players} dealerId={game.dealerId} arrangingPlayerId={arrangingPlayerId} />
           <ArrangementScreen
+            key={arrangingPlayerId}
             arrangement={arrangement}
             allowInvalidSubmissions={allowInvalidSubmissions}
+            seatProgress={seatProgress}
             onChange={setArrangement}
             onConfirm={handleConfirm}
             onSaveExit={handleSaveExit}
@@ -110,7 +166,11 @@ function App() {
       )}
 
       {view === 'results' && game && (
-        <ResultsScreen game={game} onPlayAgain={() => handleNewGame(allowInvalidSubmissions)} onHome={handleHome} />
+        <ResultsScreen
+          game={game}
+          onPlayAgain={() => handleNewGame(sessionConfig, allowInvalidSubmissions)}
+          onHome={handleHome}
+        />
       )}
     </div>
   );

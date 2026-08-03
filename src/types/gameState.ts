@@ -17,6 +17,7 @@ export interface GameState {
   gameId: string;
   status: GameStatus;
   players: Player[];
+  dealerId: string;
   currentPlayerIndex: number;
   round: number;
   results: RoundResult[];
