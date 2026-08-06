@@ -1,5 +1,14 @@
 import { describe, it, expect } from 'vitest';
-import { initializeGame, dealRound, submitArrangement, resolveRound, calculateWinner } from '../game';
+import {
+  initializeGame,
+  dealRound,
+  submitArrangement,
+  resolveRound,
+  calculateWinner,
+  frontPoints,
+  middlePoints,
+  backPoints,
+} from '../game';
 import type { InitGameConfig } from '../game';
 import type { Card, FiveCardHand, FrontHand, GameState } from '../../types';
 
@@ -231,5 +240,30 @@ describe('calculateWinner', () => {
     const state = initializeGame(config(['You', 'Bot 1']));
     const players = state.players.map((p) => ({ ...p, score: 5 }));
     expect(calculateWinner(players)).toEqual(players);
+  });
+});
+
+describe('frontPoints', () => {
+  it('gives Three of a Kind (category 4) 3 points, everything else 1', () => {
+    expect(frontPoints(4)).toBe(3);
+    expect(frontPoints(1)).toBe(1);
+    expect(frontPoints(2)).toBe(1);
+  });
+});
+
+describe('middlePoints', () => {
+  it('gives Straight/Royal Flush (9) 10, Four of a Kind (8) 8, Full House (7) 2, everything else 1', () => {
+    expect(middlePoints(9)).toBe(10);
+    expect(middlePoints(8)).toBe(8);
+    expect(middlePoints(7)).toBe(2);
+    expect(middlePoints(6)).toBe(1);
+  });
+});
+
+describe('backPoints', () => {
+  it('gives Straight/Royal Flush (9) 5, Four of a Kind (8) 4, everything else 1', () => {
+    expect(backPoints(9)).toBe(5);
+    expect(backPoints(8)).toBe(4);
+    expect(backPoints(7)).toBe(1);
   });
 });

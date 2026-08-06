@@ -8,7 +8,7 @@ import {
   resolveRound,
   normalizeLegacyGameState,
 } from './engine/game';
-import { generateAIArrangement } from './engine/ai';
+import { generateAIArrangement, generateBalancedArrangement } from './engine/ai';
 import { saveGameState, loadGameState, clearGameState, listSavedGameIds } from './engine/persistence';
 import { loadLeaderboard, recordScore, type Leaderboard } from './engine/leaderboard';
 import { Home, type SessionConfig } from './components/Home';
@@ -58,7 +58,9 @@ function dealWithAiArrangements(config: SessionConfig): GameState {
   let state = dealRound(initializeGame(buildSeatConfig(config)));
   for (const player of state.players) {
     if (player.type !== 'ai') continue;
-    const arrangement = generateAIArrangement(player.hand);
+    const arrangement = player.id === state.dealerId
+      ? generateBalancedArrangement(player.hand)
+      : generateAIArrangement(player.hand);
     state = submitArrangement(state, player.id, arrangement.front, arrangement.middle, arrangement.back);
   }
   return state;
