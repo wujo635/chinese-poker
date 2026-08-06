@@ -41,21 +41,21 @@ function buildResolvedGame(): GameState {
 describe('ResultsScreen', () => {
   it('shows a matchup row for the human against each opponent with the right score', () => {
     const game = buildResolvedGame();
-    const { container } = render(<ResultsScreen game={game} onPlayAgain={vi.fn()} onHome={vi.fn()} />);
+    const { container } = render(<ResultsScreen game={game} sessionTotals={{}} onPlayAgain={vi.fn()} onHome={vi.fn()} />);
 
     expect(screen.getByText('You vs Bot 1')).toBeInTheDocument();
     expect(screen.getByText('You vs Bot 2')).toBeInTheDocument();
     expect(screen.getByText('You vs Bot 3')).toBeInTheDocument();
 
     // The human scooped every opponent (won front, middle, and back) -> +6 each.
-    const matchupScores = container.querySelectorAll('.matchup-row__score');
+    const matchupScores = container.querySelectorAll('.results-screen__matchups .matchup-row__score');
     expect(matchupScores).toHaveLength(3);
     matchupScores.forEach((el) => expect(el.textContent).toBe('+6'));
   });
 
   it('shows a round-total summary line and no Standings heading', () => {
     const game = buildResolvedGame();
-    render(<ResultsScreen game={game} onPlayAgain={vi.fn()} onHome={vi.fn()} />);
+    render(<ResultsScreen game={game} sessionTotals={{}} onPlayAgain={vi.fn()} onHome={vi.fn()} />);
 
     expect(screen.getByText(/Your round total:/)).toBeInTheDocument();
     expect(screen.getByText('+18')).toBeInTheDocument();
@@ -64,14 +64,14 @@ describe('ResultsScreen', () => {
 
   it('marks the dealer\'s revealed hand as "(Dealer)" and "(You)" when the dealer is human', () => {
     const game = buildResolvedGame();
-    render(<ResultsScreen game={game} onPlayAgain={vi.fn()} onHome={vi.fn()} />);
+    render(<ResultsScreen game={game} sessionTotals={{}} onPlayAgain={vi.fn()} onHome={vi.fn()} />);
 
     expect(screen.getByText('You (Dealer) (You)')).toBeInTheDocument();
   });
 
   it('renders each player\'s revealed hand with its hand type', () => {
     const game = buildResolvedGame();
-    render(<ResultsScreen game={game} onPlayAgain={vi.fn()} onHome={vi.fn()} />);
+    render(<ResultsScreen game={game} sessionTotals={{}} onPlayAgain={vi.fn()} onHome={vi.fn()} />);
 
     expect(screen.getAllByText('Four of a Kind')).toHaveLength(1); // human's back
     expect(screen.getAllByText('Full House')).toHaveLength(3); // each bot's back
@@ -98,11 +98,49 @@ describe('ResultsScreen (Player mode, AI Dealer)', () => {
 
   it('labels matchup rows with the AI dealer\'s name and marks human non-dealer seats "(You)"', () => {
     const game = buildPlayerModeGame();
-    render(<ResultsScreen game={game} onPlayAgain={vi.fn()} onHome={vi.fn()} />);
+    render(<ResultsScreen game={game} sessionTotals={{}} onPlayAgain={vi.fn()} onHome={vi.fn()} />);
 
     expect(screen.getByText('AI Dealer vs You (Seat 1) (You)')).toBeInTheDocument();
     expect(screen.getByText('AI Dealer vs Bot 2')).toBeInTheDocument();
     expect(screen.getByText('AI Dealer vs You (Seat 2) (You)')).toBeInTheDocument();
     expect(screen.getByText(/AI Dealer's round total:/)).toBeInTheDocument();
+  });
+});
+
+describe('ResultsScreen (Session Totals)', () => {
+  it('renders session totals from the sessionTotals prop, not the round\'s own scores, and crowns the leader', () => {
+    const game = buildResolvedGame();
+    const sessionTotals = {
+      'player-0': 42,
+      'player-1': 7,
+      'player-2': 7,
+      'player-3': -3,
+    };
+    render(<ResultsScreen game={game} sessionTotals={sessionTotals} onPlayAgain={vi.fn()} onHome={vi.fn()} />);
+
+    expect(screen.getByText('Session Totals')).toBeInTheDocument();
+    expect(screen.getByText('👑 You (Dealer) (You)')).toBeInTheDocument();
+    expect(screen.getByText('+42')).toBeInTheDocument();
+    expect(screen.getAllByText('+7')).toHaveLength(2);
+    expect(screen.getByText('-3')).toBeInTheDocument();
+    // The human scooped every opponent this round (+6 each, +18 total) -- distinct from the
+    // session totals above, proving the section reads sessionTotals rather than recomputing.
+    expect(screen.queryByText('+18', { selector: '.results-screen__session-totals *' })).not.toBeInTheDocument();
+  });
+
+  it('crowns every tied leader when session totals are tied', () => {
+    const game = buildResolvedGame();
+    const sessionTotals = {
+      'player-0': 10,
+      'player-1': 10,
+      'player-2': 3,
+      'player-3': 3,
+    };
+    render(<ResultsScreen game={game} sessionTotals={sessionTotals} onPlayAgain={vi.fn()} onHome={vi.fn()} />);
+
+    expect(screen.getByText('👑 You (Dealer) (You)')).toBeInTheDocument();
+    expect(screen.getByText('👑 Bot 1')).toBeInTheDocument();
+    expect(screen.queryByText('👑 Bot 2')).not.toBeInTheDocument();
+    expect(screen.queryByText('👑 Bot 3')).not.toBeInTheDocument();
   });
 });

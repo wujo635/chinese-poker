@@ -1,7 +1,13 @@
 import { useEffect, useState } from 'react';
 import type { Card, FiveCardHand, FrontHand, GameState } from './types';
 import type { InitGameConfig } from './engine/game';
-import { initializeGame, dealRound, submitArrangement, resolveRound, normalizeLegacyGameState } from './engine/game';
+import {
+  initializeGame,
+  dealRound,
+  submitArrangement,
+  resolveRound,
+  normalizeLegacyGameState,
+} from './engine/game';
 import { generateAIArrangement } from './engine/ai';
 import { saveGameState, loadGameState, clearGameState, listSavedGameIds } from './engine/persistence';
 import { Home, type SessionConfig } from './components/Home';
@@ -36,6 +42,16 @@ function buildSeatConfig(config: SessionConfig): InitGameConfig {
   return { seats: [{ name: 'AI Dealer', type: 'ai' }, ...nonDealerSeats], dealerIndex: 0 };
 }
 
+function deriveSessionConfig(state: GameState): SessionConfig {
+  const dealerIsHuman = state.players.find((p) => p.id === state.dealerId)?.type === 'human';
+  const humanNonDealerCount = state.players.filter(
+    (p) => p.id !== state.dealerId && p.type === 'human',
+  ).length;
+  return dealerIsHuman
+    ? { mode: 'dealer', humanSeatCount: 1 }
+    : { mode: 'player', humanSeatCount: (humanNonDealerCount || 1) as 1 | 2 | 3 };
+}
+
 /** Deals a fresh round and has every AI player lock in their arrangement immediately. */
 function dealWithAiArrangements(config: SessionConfig): GameState {
   let state = dealRound(initializeGame(buildSeatConfig(config)));
@@ -56,13 +72,15 @@ function App() {
   const [savedGameId, setSavedGameId] = useState<string | null>(null);
   const [allowInvalidSubmissions, setAllowInvalidSubmissions] = useState(false);
   const [sessionConfig, setSessionConfig] = useState<SessionConfig>({ mode: 'dealer', humanSeatCount: 1 });
+  const [sessionActive, setSessionActive] = useState(false);
+  const [sessionTotals, setSessionTotals] = useState<Record<string, number>>({});
 
   useEffect(() => {
     const ids = listSavedGameIds();
     setSavedGameId(ids[0] ?? null);
   }, []);
 
-  function handleNewGame(config: SessionConfig, allowInvalid: boolean) {
+  function beginRound(config: SessionConfig, allowInvalid: boolean) {
     const fresh = dealWithAiArrangements(config);
     const humanIds = fresh.players.filter((p) => p.type === 'human').map((p) => p.id);
     const [first, ...rest] = humanIds;
@@ -75,11 +93,29 @@ function App() {
     setView('arranging');
   }
 
+  function handleNewGame(config: SessionConfig, allowInvalid: boolean) {
+    setSessionActive(true);
+    setSessionTotals({});
+    beginRound(config, allowInvalid);
+  }
+
+  function handleContinueSession(allowInvalid: boolean) {
+    beginRound(sessionConfig, allowInvalid);
+  }
+
+  function handleEndSession() {
+    setSessionActive(false);
+    setSessionTotals({});
+  }
+
   function handleContinue() {
     if (!savedGameId) return;
     const loaded = loadGameState(savedGameId);
     if (!loaded) return;
     const normalized = normalizeLegacyGameState(loaded);
+    setSessionActive(true);
+    setSessionTotals({});
+    setSessionConfig(deriveSessionConfig(normalized));
     const remainingHumanIds = normalized.players
       .filter((p) => p.type === 'human' && p.arrangement === null)
       .map((p) => p.id);
@@ -112,6 +148,11 @@ function App() {
 
     if (updated.status === 'comparing') {
       updated = resolveRound(updated);
+      setSessionTotals((prev) => {
+        const next = { ...prev };
+        for (const p of updated.players) next[p.id] = (next[p.id] ?? 0) + p.score;
+        return next;
+      });
       setGame(updated);
       clearGameState(game.gameId);
       setSavedGameId(null);
@@ -147,7 +188,15 @@ function App() {
       <h1 className="app__title">Chinese Poker</h1>
 
       {view === 'home' && (
-        <Home hasSavedGame={savedGameId !== null} onNewGame={handleNewGame} onContinue={handleContinue} />
+        <Home
+          hasSavedGame={savedGameId !== null}
+          sessionActive={sessionActive}
+          sessionConfig={sessionConfig}
+          onNewGame={handleNewGame}
+          onContinueSession={handleContinueSession}
+          onEndSession={handleEndSession}
+          onContinue={handleContinue}
+        />
       )}
 
       {view === 'arranging' && arrangement && game && arrangingPlayerId && (
@@ -168,7 +217,8 @@ function App() {
       {view === 'results' && game && (
         <ResultsScreen
           game={game}
-          onPlayAgain={() => handleNewGame(sessionConfig, allowInvalidSubmissions)}
+          sessionTotals={sessionTotals}
+          onPlayAgain={() => handleContinueSession(allowInvalidSubmissions)}
           onHome={handleHome}
         />
       )}

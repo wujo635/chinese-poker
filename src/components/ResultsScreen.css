@@ -71,6 +71,16 @@
   color: #555;
 }
 
+.results-screen__session-totals {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.results-screen__session-totals h3 {
+  margin: 0;
+}
+
 .results-screen__hands {
   display: flex;
   flex-direction: column;

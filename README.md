@@ -12,7 +12,8 @@ A web app for Chinese Poker: deal 13 cards, arrange them into front (3), middle 
 - Round scoring: each hand is worth points based on the winning hand's strength (see below), automatic -3 foul loss
 - Optional "allow invalid submissions" toggle on Home — turn off foul-blocking so a fouled arrangement can still be submitted (and auto-loses as usual)
 - Results screen with a round-total summary, Dealer-vs-each-opponent matchup breakdown, and all hands revealed
-- Save & Exit / Continue Saved Game via browser `localStorage`, including mid-multi-seat-arranging
+- Session running totals: once a round is played, Home locks in that session's mode/seat-count and offers "Continue Session" or "End Session"; Results shows a "Session Totals" section with each seat's cumulative score and a crown on the leader(s). Totals are in-memory only (not persisted) and reset when the session ends.
+- Save & Exit / Continue Saved Game via browser `localStorage`, including mid-multi-seat-arranging (also (re)activates session tracking if none was active)
 
 ## Suit tiebreaker order
 ♠ Spades > ♥ Hearts > ♣ Clubs > ♦ Diamonds — used only when two hands/cards are otherwise exactly equal in rank strength.

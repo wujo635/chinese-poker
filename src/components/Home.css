@@ -31,6 +31,13 @@
   margin: 0;
 }
 
+.home__locked-mode {
+  margin: 0;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #444;
+}
+
 .home__actions {
   display: flex;
   gap: 1rem;
