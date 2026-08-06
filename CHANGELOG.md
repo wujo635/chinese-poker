@@ -5,6 +5,16 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.16.0] - 2026-08-05
+
+### Added
+- Session running totals: once a round is played, Home locks the session's mode/seat-count (hides the picker, shows a locked-mode line) and offers "Continue Session" (deal another round with the same config) alongside a new "End Session" button that resets back to the normal picker.
+- `ResultsScreen` gains a "Session Totals" section — one row per seat with that seat's cumulative score across every round played so far this session (not just the human's), crowning the current leader(s) — below the existing per-round matchup rows.
+- "Continue Saved Game" now also (re)activates session tracking if none was active, inferring the locked mode/seat-count from the resumed save.
+
+### Changed
+- The "Home" button on `ResultsScreen` no longer implicitly ends the session — session totals and the locked mode now persist through Results → Home → Continue Session, exactly as they already do through Results → Play Again. A session now only ends via the explicit new "End Session" button.
+
 ## [0.15.0] - 2026-08-01
 
 ### Added

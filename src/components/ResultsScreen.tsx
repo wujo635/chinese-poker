@@ -5,6 +5,7 @@ import './ResultsScreen.css';
 
 interface ResultsScreenProps {
   game: GameState;
+  sessionTotals: Record<string, number>;
   onPlayAgain: () => void;
   onHome: () => void;
 }
@@ -21,7 +22,7 @@ function formatScore(score: number): string {
   return score > 0 ? `+${score}` : `${score}`;
 }
 
-export function ResultsScreen({ game, onPlayAgain, onHome }: ResultsScreenProps) {
+export function ResultsScreen({ game, sessionTotals, onPlayAgain, onHome }: ResultsScreenProps) {
   const dealer = game.players.find((p) => p.id === game.dealerId)!;
   const opponents = game.players.filter((p) => p.id !== dealer.id);
   const isDealerHuman = dealer.type === 'human';
@@ -32,6 +33,7 @@ export function ResultsScreen({ game, onPlayAgain, onHome }: ResultsScreenProps)
   }));
 
   const roundTotal = dealerMatchups.reduce((sum, { result }) => sum + result.roundScore, 0);
+  const topSessionTotal = Math.max(...game.players.map((p) => sessionTotals[p.id] ?? 0));
 
   return (
     <div className="results-screen">
@@ -62,6 +64,23 @@ export function ResultsScreen({ game, onPlayAgain, onHome }: ResultsScreenProps)
             </span>
             <span className={`matchup-row__score matchup-row__score--${scoreClass(result.roundScore)}`}>
               {formatScore(result.roundScore)}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      <div className="results-screen__session-totals">
+        <h3>Session Totals</h3>
+        {game.players.map((p) => (
+          <div key={p.id} className="matchup-row">
+            <span className="matchup-row__name">
+              {(sessionTotals[p.id] ?? 0) === topSessionTotal ? '👑 ' : ''}
+              {p.name}
+              {p.id === dealer.id ? ' (Dealer)' : ''}
+              {p.type === 'human' ? ' (You)' : ''}
+            </span>
+            <span className={`matchup-row__score matchup-row__score--${scoreClass(sessionTotals[p.id] ?? 0)}`}>
+              {formatScore(sessionTotals[p.id] ?? 0)}
             </span>
           </div>
         ))}

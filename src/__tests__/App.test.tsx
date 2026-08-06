@@ -24,15 +24,16 @@ describe('App', () => {
     expect(screen.getByText(/Front \(0\/3\)/)).toBeInTheDocument();
   });
 
-  it('offers "Continue Saved Game" on Home after Save & Exit', async () => {
+  it('offers "Continue Saved Game" alongside the active session\'s buttons on Home after Save & Exit', async () => {
     const user = userEvent.setup();
     render(<App />);
 
     await user.click(screen.getByRole('button', { name: 'New Game' }));
     await user.click(screen.getByRole('button', { name: 'Save & Exit' }));
 
-    expect(screen.getByRole('button', { name: 'New Game' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Continue Saved Game' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Continue Session' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'End Session' })).toBeInTheDocument();
   });
 
   it('goes straight from arranging to results on Confirm, with no review step', async () => {
@@ -90,5 +91,115 @@ describe('App', () => {
 
     // Resumes on seat 2, not seat 1 (whose confirmed arrangement stays locked in).
     expect(screen.getByText('Arranging Seat 2 of 2')).toBeInTheDocument();
+  });
+
+  it('accumulates session totals across two rounds played via Play Again', async () => {
+    const user = userEvent.setup();
+    const { container } = render(<App />);
+
+    await user.click(screen.getByRole('checkbox')); // allow invalid submissions, avoids Auto-Place foul flakiness
+    await user.click(screen.getByRole('button', { name: 'New Game' }));
+    await user.click(screen.getByRole('button', { name: 'Auto-Place' }));
+    await user.click(screen.getByRole('button', { name: 'Confirm' }));
+
+    const round1Total = Number(container.querySelector('.results-screen__summary-score')!.textContent);
+    const round1SessionTotal = Number(
+      container.querySelector('.results-screen__session-totals .matchup-row__score')!.textContent,
+    );
+    expect(round1SessionTotal).toBe(round1Total);
+
+    await user.click(screen.getByRole('button', { name: 'Play Again' }));
+    await user.click(screen.getByRole('button', { name: 'Auto-Place' }));
+    await user.click(screen.getByRole('button', { name: 'Confirm' }));
+
+    const round2Total = Number(container.querySelector('.results-screen__summary-score')!.textContent);
+    const round2SessionTotal = Number(
+      container.querySelector('.results-screen__session-totals .matchup-row__score')!.textContent,
+    );
+    expect(round2SessionTotal).toBe(round1Total + round2Total);
+  });
+
+  it('accumulates a non-human seat\'s session total in Player mode', async () => {
+    const user = userEvent.setup();
+    const { container } = render(<App />);
+
+    await user.click(screen.getByRole('radio', { name: /Play vs AI Dealer/ }));
+    await user.click(screen.getByRole('radio', { name: 'Control 2 seats' }));
+    await user.click(screen.getByRole('checkbox'));
+    await user.click(screen.getByRole('button', { name: 'New Game' }));
+    await user.click(screen.getByRole('button', { name: 'Auto-Place' }));
+    await user.click(screen.getByRole('button', { name: 'Confirm' }));
+    await user.click(screen.getByRole('button', { name: 'Auto-Place' }));
+    await user.click(screen.getByRole('button', { name: 'Confirm' }));
+
+    // Row order mirrors game.players: AI Dealer, You (Seat 1), You (Seat 2), Bot 3.
+    const round1BotRow = container.querySelectorAll('.results-screen__session-totals .matchup-row__score')[3];
+    const round1BotTotal = Number(round1BotRow.textContent);
+
+    await user.click(screen.getByRole('button', { name: 'Play Again' }));
+    await user.click(screen.getByRole('button', { name: 'Auto-Place' }));
+    await user.click(screen.getByRole('button', { name: 'Confirm' }));
+    await user.click(screen.getByRole('button', { name: 'Auto-Place' }));
+    await user.click(screen.getByRole('button', { name: 'Confirm' }));
+
+    const round2BotMatchupTotal = Number(
+      Array.from(container.querySelectorAll('.results-screen__matchups .matchup-row')).find((row) =>
+        row.textContent!.includes('Bot 3'),
+      )!.querySelector('.matchup-row__score')!.textContent,
+    );
+    const round2BotSessionTotal = Number(
+      container.querySelectorAll('.results-screen__session-totals .matchup-row__score')[3].textContent,
+    );
+
+    // Bot 3 is a non-dealer seat, so its own net for the round is the negation of the
+    // dealer-vs-Bot-3 matchup score shown on Results.
+    expect(round2BotSessionTotal).toBe(round1BotTotal - round2BotMatchupTotal);
+  });
+
+  it('resets session totals when End Session is clicked, so a fresh New Game starts totals at round-1 values', async () => {
+    const user = userEvent.setup();
+    const { container } = render(<App />);
+
+    await user.click(screen.getByRole('checkbox'));
+    await user.click(screen.getByRole('button', { name: 'New Game' }));
+    await user.click(screen.getByRole('button', { name: 'Auto-Place' }));
+    await user.click(screen.getByRole('button', { name: 'Confirm' }));
+
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+    expect(screen.getByRole('button', { name: 'End Session' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'End Session' }));
+
+    expect(screen.getByRole('button', { name: 'New Game' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Continue Session' })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'New Game' }));
+    await user.click(screen.getByRole('button', { name: 'Auto-Place' }));
+    await user.click(screen.getByRole('button', { name: 'Confirm' }));
+
+    const roundTotal = Number(container.querySelector('.results-screen__summary-score')!.textContent);
+    const sessionTotal = Number(
+      container.querySelector('.results-screen__session-totals .matchup-row__score')!.textContent,
+    );
+    expect(sessionTotal).toBe(roundTotal);
+  });
+
+  it('(re)activates session tracking when resuming a saved game with no active session', async () => {
+    const user = userEvent.setup();
+    const first = render(<App />);
+
+    await user.click(screen.getByRole('checkbox'));
+    await user.click(screen.getByRole('button', { name: 'New Game' }));
+    await user.click(screen.getByRole('button', { name: 'Save & Exit' }));
+    first.unmount();
+
+    render(<App />);
+    expect(await screen.findByRole('button', { name: 'Continue Saved Game' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Continue Session' })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Continue Saved Game' }));
+    await user.click(screen.getByRole('button', { name: 'Auto-Place' }));
+    await user.click(screen.getByRole('button', { name: 'Confirm' }));
+
+    expect(screen.getByText('Session Totals')).toBeInTheDocument();
   });
 });
