@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import type { Leaderboard } from '../engine/leaderboard';
 import './Home.css';
 
 export interface SessionConfig {
@@ -10,6 +11,7 @@ interface HomeProps {
   hasSavedGame: boolean;
   sessionActive: boolean;
   sessionConfig: SessionConfig;
+  leaderboard: Leaderboard;
   onNewGame: (config: SessionConfig, allowInvalidSubmissions: boolean) => void;
   onContinueSession: (allowInvalidSubmissions: boolean) => void;
   onEndSession: () => void;
@@ -22,10 +24,15 @@ function lockedModeLabel(config: SessionConfig): string {
   return `Session locked: Play vs AI Dealer — controlling ${n} seat${n > 1 ? 's' : ''}`;
 }
 
+function formatScore(score: number): string {
+  return score > 0 ? `+${score}` : `${score}`;
+}
+
 export function Home({
   hasSavedGame,
   sessionActive,
   sessionConfig,
+  leaderboard,
   onNewGame,
   onContinueSession,
   onEndSession,
@@ -106,6 +113,29 @@ export function Home({
           </>
         )}
       </div>
+
+      <section className="home__leaderboard">
+        <h3>Leaderboard</h3>
+        {(['dealer', 'player'] as const).map((mode) => (
+          <div key={mode} className="home__leaderboard-column">
+            <h4>{mode === 'dealer' ? 'Dealer Mode' : 'Player Mode'}</h4>
+            {leaderboard[mode].length === 0 ? (
+              <p className="home__leaderboard-empty">No scores yet</p>
+            ) : (
+              <ol className="home__leaderboard-list">
+                {leaderboard[mode].map((entry, i) => (
+                  <li key={i}>
+                    {formatScore(entry.score)}
+                    {mode === 'player' ? ` (${entry.seatCount} seat${entry.seatCount > 1 ? 's' : ''})` : ''}
+                    {' — '}
+                    {new Date(entry.date).toLocaleDateString()}
+                  </li>
+                ))}
+              </ol>
+            )}
+          </div>
+        ))}
+      </section>
     </div>
   );
 }
