@@ -5,6 +5,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.17.0] - 2026-08-06
+
+### Added
+- A persisted, all-time **Leaderboard** on Home — top 5 scores per session mode (Dealer / Player), recorded when a session is explicitly ended via "End Session". Player-mode entries show the seat count they were achieved with (score is the sum of all your controlled seats' totals for that session). Stored in `localStorage` (`chinese-poker:leaderboard`), independent of in-session running totals.
+
+### Known limitation
+- Resuming a session via `handleContinue()` (Save & Exit → Continue, or "Continue Saved Game" while a session is active) resets the in-session running totals that feed the leaderboard entry — so a leaderboard score recorded after a resume only reflects rounds played *since* that resume, not the full session. This is pre-existing behavior from v0.16.0's session-totals design; not addressed by this feature.
+
 ## [0.16.0] - 2026-08-05
 
 ### Added

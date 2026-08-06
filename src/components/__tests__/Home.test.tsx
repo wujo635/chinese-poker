@@ -5,6 +5,7 @@ import { Home } from '../Home';
 import { vi } from 'vitest';
 
 const defaultSessionConfig = { mode: 'dealer' as const, humanSeatCount: 1 as const };
+const emptyLeaderboard = { dealer: [], player: [] };
 
 describe('Home', () => {
   it('defaults to Dealer mode with the seat-count picker hidden, and calls onNewGame accordingly', async () => {
@@ -15,6 +16,7 @@ describe('Home', () => {
         hasSavedGame={false}
         sessionActive={false}
         sessionConfig={defaultSessionConfig}
+        leaderboard={emptyLeaderboard}
         onNewGame={onNewGame}
         onContinueSession={vi.fn()}
         onEndSession={vi.fn()}
@@ -38,6 +40,7 @@ describe('Home', () => {
         hasSavedGame={false}
         sessionActive={false}
         sessionConfig={defaultSessionConfig}
+        leaderboard={emptyLeaderboard}
         onNewGame={onNewGame}
         onContinueSession={vi.fn()}
         onEndSession={vi.fn()}
@@ -62,6 +65,7 @@ describe('Home', () => {
         hasSavedGame={false}
         sessionActive={false}
         sessionConfig={defaultSessionConfig}
+        leaderboard={emptyLeaderboard}
         onNewGame={onNewGame}
         onContinueSession={vi.fn()}
         onEndSession={vi.fn()}
@@ -81,6 +85,7 @@ describe('Home', () => {
         hasSavedGame={false}
         sessionActive={true}
         sessionConfig={{ mode: 'dealer', humanSeatCount: 1 }}
+        leaderboard={emptyLeaderboard}
         onNewGame={vi.fn()}
         onContinueSession={vi.fn()}
         onEndSession={vi.fn()}
@@ -101,6 +106,7 @@ describe('Home', () => {
         hasSavedGame={false}
         sessionActive={true}
         sessionConfig={{ mode: 'player', humanSeatCount: 2 }}
+        leaderboard={emptyLeaderboard}
         onNewGame={vi.fn()}
         onContinueSession={vi.fn()}
         onEndSession={vi.fn()}
@@ -119,6 +125,7 @@ describe('Home', () => {
         hasSavedGame={true}
         sessionActive={true}
         sessionConfig={defaultSessionConfig}
+        leaderboard={emptyLeaderboard}
         onNewGame={vi.fn()}
         onContinueSession={vi.fn()}
         onEndSession={vi.fn()}
@@ -140,6 +147,7 @@ describe('Home', () => {
         hasSavedGame={false}
         sessionActive={true}
         sessionConfig={defaultSessionConfig}
+        leaderboard={emptyLeaderboard}
         onNewGame={vi.fn()}
         onContinueSession={onContinueSession}
         onEndSession={onEndSession}
@@ -152,5 +160,45 @@ describe('Home', () => {
 
     await user.click(screen.getByRole('button', { name: 'End Session' }));
     expect(onEndSession).toHaveBeenCalled();
+  });
+
+  it('shows "No scores yet" for a mode with no leaderboard entries', () => {
+    render(
+      <Home
+        hasSavedGame={false}
+        sessionActive={false}
+        sessionConfig={defaultSessionConfig}
+        leaderboard={emptyLeaderboard}
+        onNewGame={vi.fn()}
+        onContinueSession={vi.fn()}
+        onEndSession={vi.fn()}
+        onContinue={vi.fn()}
+      />,
+    );
+
+    const noScores = screen.getAllByText('No scores yet');
+    expect(noScores).toHaveLength(2);
+  });
+
+  it('renders dealer-mode entries as a bare score and player-mode entries with a seat-count suffix', () => {
+    const leaderboard = {
+      dealer: [{ score: 42, seatCount: 1, date: '2026-08-01T00:00:00.000Z' }],
+      player: [{ score: 54, seatCount: 3, date: '2026-08-02T00:00:00.000Z' }],
+    };
+    render(
+      <Home
+        hasSavedGame={false}
+        sessionActive={false}
+        sessionConfig={defaultSessionConfig}
+        leaderboard={leaderboard}
+        onNewGame={vi.fn()}
+        onContinueSession={vi.fn()}
+        onEndSession={vi.fn()}
+        onContinue={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText(/^\+42 —/)).toBeInTheDocument();
+    expect(screen.getByText(/^\+54 \(3 seats\) —/)).toBeInTheDocument();
   });
 });

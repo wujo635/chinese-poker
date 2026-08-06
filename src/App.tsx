@@ -10,6 +10,7 @@ import {
 } from './engine/game';
 import { generateAIArrangement } from './engine/ai';
 import { saveGameState, loadGameState, clearGameState, listSavedGameIds } from './engine/persistence';
+import { loadLeaderboard, recordScore, type Leaderboard } from './engine/leaderboard';
 import { Home, type SessionConfig } from './components/Home';
 import { PlayerDashboard } from './components/PlayerDashboard';
 import { ArrangementScreen, type ArrangementState } from './components/ArrangementScreen';
@@ -74,10 +75,13 @@ function App() {
   const [sessionConfig, setSessionConfig] = useState<SessionConfig>({ mode: 'dealer', humanSeatCount: 1 });
   const [sessionActive, setSessionActive] = useState(false);
   const [sessionTotals, setSessionTotals] = useState<Record<string, number>>({});
+  const [sessionHumanIds, setSessionHumanIds] = useState<string[]>([]);
+  const [leaderboard, setLeaderboard] = useState<Leaderboard>({ dealer: [], player: [] });
 
   useEffect(() => {
     const ids = listSavedGameIds();
     setSavedGameId(ids[0] ?? null);
+    setLeaderboard(loadLeaderboard());
   }, []);
 
   function beginRound(config: SessionConfig, allowInvalid: boolean) {
@@ -96,6 +100,7 @@ function App() {
   function handleNewGame(config: SessionConfig, allowInvalid: boolean) {
     setSessionActive(true);
     setSessionTotals({});
+    setSessionHumanIds([]);
     beginRound(config, allowInvalid);
   }
 
@@ -104,8 +109,13 @@ function App() {
   }
 
   function handleEndSession() {
+    if (sessionHumanIds.length > 0) {
+      const humanTotal = sessionHumanIds.reduce((sum, id) => sum + (sessionTotals[id] ?? 0), 0);
+      setLeaderboard(recordScore(sessionConfig.mode, humanTotal, sessionConfig.humanSeatCount));
+    }
     setSessionActive(false);
     setSessionTotals({});
+    setSessionHumanIds([]);
   }
 
   function handleContinue() {
@@ -115,6 +125,7 @@ function App() {
     const normalized = normalizeLegacyGameState(loaded);
     setSessionActive(true);
     setSessionTotals({});
+    setSessionHumanIds([]);
     setSessionConfig(deriveSessionConfig(normalized));
     const remainingHumanIds = normalized.players
       .filter((p) => p.type === 'human' && p.arrangement === null)
@@ -153,6 +164,7 @@ function App() {
         for (const p of updated.players) next[p.id] = (next[p.id] ?? 0) + p.score;
         return next;
       });
+      setSessionHumanIds(updated.players.filter((p) => p.type === 'human').map((p) => p.id));
       setGame(updated);
       clearGameState(game.gameId);
       setSavedGameId(null);
@@ -192,6 +204,7 @@ function App() {
           hasSavedGame={savedGameId !== null}
           sessionActive={sessionActive}
           sessionConfig={sessionConfig}
+          leaderboard={leaderboard}
           onNewGame={handleNewGame}
           onContinueSession={handleContinueSession}
           onEndSession={handleEndSession}

@@ -202,4 +202,63 @@ describe('App', () => {
 
     expect(screen.getByText('Session Totals')).toBeInTheDocument();
   });
+
+  it('records the session score to the Dealer leaderboard when End Session is clicked', async () => {
+    const user = userEvent.setup();
+    const { container } = render(<App />);
+
+    await user.click(screen.getByRole('checkbox'));
+    await user.click(screen.getByRole('button', { name: 'New Game' }));
+    await user.click(screen.getByRole('button', { name: 'Auto-Place' }));
+    await user.click(screen.getByRole('button', { name: 'Confirm' }));
+
+    const roundTotal = Number(container.querySelector('.results-screen__summary-score')!.textContent);
+
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+    await user.click(screen.getByRole('button', { name: 'End Session' }));
+
+    const dealerEntry = container.querySelector('.home__leaderboard-column .home__leaderboard-list li')!;
+    const scoreMatch = dealerEntry.textContent!.match(/^([+-]?\d+)/);
+    expect(Number(scoreMatch![1])).toBe(roundTotal);
+  });
+
+  it('records the summed score of your controlled seats to the Player leaderboard, annotated with seat count', async () => {
+    const user = userEvent.setup();
+    const { container } = render(<App />);
+
+    await user.click(screen.getByRole('radio', { name: /Play vs AI Dealer/ }));
+    await user.click(screen.getByRole('radio', { name: 'Control 2 seats' }));
+    await user.click(screen.getByRole('checkbox'));
+    await user.click(screen.getByRole('button', { name: 'New Game' }));
+    await user.click(screen.getByRole('button', { name: 'Auto-Place' }));
+    await user.click(screen.getByRole('button', { name: 'Confirm' }));
+    await user.click(screen.getByRole('button', { name: 'Auto-Place' }));
+    await user.click(screen.getByRole('button', { name: 'Confirm' }));
+
+    // Row order mirrors game.players: AI Dealer, You (Seat 1), You (Seat 2), Bot 3.
+    const sessionScores = Array.from(
+      container.querySelectorAll('.results-screen__session-totals .matchup-row__score'),
+    ).map((el) => Number(el.textContent));
+    const expectedSum = sessionScores[1] + sessionScores[2];
+
+    await user.click(screen.getByRole('button', { name: 'Home' }));
+    await user.click(screen.getByRole('button', { name: 'End Session' }));
+
+    const playerColumn = container.querySelectorAll('.home__leaderboard-column')[1];
+    const entry = playerColumn.querySelector('.home__leaderboard-list li')!;
+    expect(entry.textContent).toContain('(2 seats)');
+    const scoreMatch = entry.textContent!.match(/^([+-]?\d+)/);
+    expect(Number(scoreMatch![1])).toBe(expectedSum);
+  });
+
+  it('does not record a leaderboard entry when a session ends with no rounds played', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole('button', { name: 'New Game' }));
+    await user.click(screen.getByRole('button', { name: 'Save & Exit' }));
+    await user.click(screen.getByRole('button', { name: 'End Session' }));
+
+    expect(screen.getAllByText('No scores yet')).toHaveLength(2);
+  });
 });

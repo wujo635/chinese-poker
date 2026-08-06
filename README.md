@@ -13,6 +13,7 @@ A web app for Chinese Poker: deal 13 cards, arrange them into front (3), middle 
 - Optional "allow invalid submissions" toggle on Home — turn off foul-blocking so a fouled arrangement can still be submitted (and auto-loses as usual)
 - Results screen with a round-total summary, Dealer-vs-each-opponent matchup breakdown, and all hands revealed
 - Session running totals: once a round is played, Home locks in that session's mode/seat-count and offers "Continue Session" or "End Session"; Results shows a "Session Totals" section with each seat's cumulative score and a crown on the leader(s). Totals are in-memory only (not persisted) and reset when the session ends.
+- Persisted all-time **Leaderboard** on Home — top 5 scores per session mode, recorded when a session ends via "End Session" (player-mode entries show the seat count they were achieved with). Stored in `localStorage`, independent of the in-session running totals above.
 - Save & Exit / Continue Saved Game via browser `localStorage`, including mid-multi-seat-arranging (also (re)activates session tracking if none was active)
 
 ## Suit tiebreaker order
