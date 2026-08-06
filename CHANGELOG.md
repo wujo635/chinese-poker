@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.18.0] - 2026-08-06
 
 ### Added
-- A new "Balanced" AI arrangement strategy (`generateBalancedArrangement`) that optimizes total expected score across all three zones using the game's real scoring table, instead of greedily maximizing the back hand. The AI Dealer (Player mode) now uses this strategy; non-dealer AI bots and the human's "Auto-Place" button are unchanged. This addresses the previous AI producing unrealistically strong back hands (Full House or better ~44% of the time, vs. ~0.14% in random 5-card poker) by considering the whole hand together rather than greedily maximizing one zone first.
+- A new "Optimal" AI arrangement strategy (`generateOptimalArrangement`) that maximizes total score across all three zones together, using the game's real scoring table, instead of greedily maximizing the back hand alone. It's a globally optimal maximizer rather than a distinct personality — verified to never miss a legal opportunity to place a strong hand (e.g. a Four of a Kind) in whichever zone pays more, while correctly respecting that back must always beat middle. The AI Dealer (Player mode) now uses this strategy; non-dealer AI bots and the human's "Auto-Place" button are unchanged. This addresses the previous AI producing unrealistically strong back hands (Full House or better ~44% of the time, vs. ~0.14% in random 5-card poker) by considering the whole hand together rather than greedily maximizing one zone first.
 
 ### Changed
 - `frontPoints`/`middlePoints`/`backPoints` in `src/engine/game.ts` are now exported, so the new AI strategy can reuse the same scoring table as real round resolution rather than a separately-maintained heuristic.

@@ -262,7 +262,7 @@ describe('App', () => {
     expect(screen.getAllByText('No scores yet')).toHaveLength(2);
   });
 
-  it('the AI Dealer never fouls in Player mode, now that it uses the Balanced strategy', async () => {
+  it('the AI Dealer never fouls in Player mode, now that it uses the Optimal strategy', async () => {
     const user = userEvent.setup();
     const { container } = render(<App />);
 

@@ -37,15 +37,22 @@ export function generateAIArrangement(hand: Card[]): Arrangement {
 }
 
 /**
- * Balanced AI: brute-forces every valid (front, middle, back) partition of the 13-card
+ * Optimal AI: brute-forces every valid (front, middle, back) partition of the 13-card
  * hand and picks the one maximizing total zone points from the game's real scoring table
  * (frontPoints/middlePoints/backPoints), rather than greedily maximizing the back hand
- * alone. E.g. a natural Four of a Kind is worth more in the middle (8) than the back (4),
- * so this strategy prefers placing it there when that raises the total. Prefers a
+ * alone. This is a globally optimal maximizer, not a distinct "personality" — it still
+ * always plays for the highest score, just correctly across all three zones together
+ * instead of one at a time. E.g. a natural Four of a Kind is worth more in the middle (8)
+ * than the back (4): whenever a legal (non-fouling) arrangement can place it there, this
+ * exhaustive search finds it automatically, since it's simply the highest-scoring option
+ * among every partition examined (verified: two-quad and straight-flush-plus-quad hands
+ * both correctly move the weaker/movable strong hand to the middle). A lone unbeatable
+ * hand (nothing else in the deal can beat it) is correctly forced to stay in back, since
+ * back must always beat middle — that's the rules, not a missed opportunity. Prefers a
  * non-fouling arrangement; falls back to the highest-scoring arrangement overall only if
  * every partition fouls (same accepted-risk caveat as generateAIArrangement above).
  */
-export function generateBalancedArrangement(hand: Card[]): Arrangement {
+export function generateOptimalArrangement(hand: Card[]): Arrangement {
   let best: Arrangement | null = null;
   let bestScore = -Infinity;
   let bestValid: Arrangement | null = null;
