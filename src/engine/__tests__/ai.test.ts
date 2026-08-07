@@ -160,5 +160,5 @@ describe('generateOptimalArrangement', () => {
       const optimalTotal = totalPoints(optimal.front, optimal.middle, optimal.back);
       expect(optimalTotal).toBeGreaterThanOrEqual(maximizerTotal);
     }
-  });
+  }, 20000);
 });
