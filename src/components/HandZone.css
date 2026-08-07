@@ -9,6 +9,32 @@
   border-color: #2e86de;
 }
 
+/*
+ * Notable-hand tiers, keyed by category so the same hand always reads the same color
+ * regardless of which zone it landed in (see HandZone.tsx's NotableTier / ResultsScreen's
+ * notableTier()). Ordered low tier -> high tier; a solid border replaces the default dashed
+ * one so these read as distinct from the plain "empty zone" outline.
+ */
+.hand-zone--tier-trips {
+  border: 2px solid #b5651d;
+  background: rgba(181, 101, 29, 0.08);
+}
+
+.hand-zone--tier-full-house {
+  border: 2px solid #1f7a3f;
+  background: rgba(31, 122, 63, 0.08);
+}
+
+.hand-zone--tier-quads {
+  border: 2px solid #b8860b;
+  background: rgba(184, 134, 11, 0.1);
+}
+
+.hand-zone--tier-straight-flush {
+  border: 2px solid #7b2cbf;
+  background: rgba(123, 44, 191, 0.1);
+}
+
 .hand-zone__header {
   display: flex;
   justify-content: space-between;

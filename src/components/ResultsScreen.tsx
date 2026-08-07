@@ -1,6 +1,7 @@
-import type { GameState, MatchupResult } from '../types';
-import { HandZone } from './HandZone';
-import { identifyHandType } from '../engine/handRank';
+import type { Card, GameState, MatchupResult } from '../types';
+import { HandZone, type NotableTier } from './HandZone';
+import { getHandStrength, identifyHandType } from '../engine/handRank';
+import { frontPoints, middlePoints, backPoints } from '../engine/game';
 import './ResultsScreen.css';
 
 interface ResultsScreenProps {
@@ -20,6 +21,26 @@ function scoreClass(score: number): string {
 
 function formatScore(score: number): string {
   return score > 0 ? `+${score}` : `${score}`;
+}
+
+const TIER_BY_CATEGORY: Partial<Record<number, NotableTier>> = {
+  4: 'trips',
+  7: 'full-house',
+  8: 'quads',
+  9: 'straight-flush',
+};
+
+/**
+ * The color tier for a zone's hand, keyed by category so the same hand (e.g. Four of a Kind)
+ * always gets the same color whether it landed in Middle or Back -- or `null` if that zone's
+ * hand doesn't score above the base 1 point on its zone-specific scale (see game.ts). A tier
+ * only ever maps to categories that also clear that zone's `pointsFor` threshold (Full House
+ * is a tier but only scores >1 in Middle, never Back), so the two checks always agree.
+ */
+function notableTier(cards: Card[], pointsFor: (category: number) => number): NotableTier | null {
+  const category = getHandStrength(cards)[0];
+  if (pointsFor(category) <= 1) return null;
+  return TIER_BY_CATEGORY[category] ?? null;
 }
 
 export function ResultsScreen({ game, sessionTotals, onPlayAgain, onHome }: ResultsScreenProps) {
@@ -97,9 +118,27 @@ export function ResultsScreen({ game, sessionTotals, onPlayAgain, onHome }: Resu
             </h4>
             {p.arrangement && (
               <div className="results-screen__zones">
-                <HandZone label="Front" cards={p.arrangement.front} capacity={3} handTypeLabel={identifyHandType(p.arrangement.front)} />
-                <HandZone label="Middle" cards={p.arrangement.middle} capacity={5} handTypeLabel={identifyHandType(p.arrangement.middle)} />
-                <HandZone label="Back" cards={p.arrangement.back} capacity={5} handTypeLabel={identifyHandType(p.arrangement.back)} />
+                <HandZone
+                  label="Front"
+                  cards={p.arrangement.front}
+                  capacity={3}
+                  handTypeLabel={identifyHandType(p.arrangement.front)}
+                  notableTier={notableTier(p.arrangement.front, frontPoints)}
+                />
+                <HandZone
+                  label="Middle"
+                  cards={p.arrangement.middle}
+                  capacity={5}
+                  handTypeLabel={identifyHandType(p.arrangement.middle)}
+                  notableTier={notableTier(p.arrangement.middle, middlePoints)}
+                />
+                <HandZone
+                  label="Back"
+                  cards={p.arrangement.back}
+                  capacity={5}
+                  handTypeLabel={identifyHandType(p.arrangement.back)}
+                  notableTier={notableTier(p.arrangement.back, backPoints)}
+                />
               </div>
             )}
           </div>
