@@ -5,6 +5,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.19.0] - 2026-08-07
+
+### Added
+- `ResultsScreen`'s per-player hand-reveal section now colors the whole zone box (border + background tint) for any hand that scores more than the base 1 point on its zone-specific scale (`frontPoints`/`middlePoints`/`backPoints` in `game.ts`). The color is keyed by hand category, not by zone, so the same category always reads the same color no matter which zone it landed in: Trips (bronze, Front only), Full House (green, Middle only), Four of a Kind (gold, Middle or Back), Straight/Royal Flush (purple, Middle or Back). Ordinary categories (High Card, Pair, Two Pair, plain Straight/Flush, and Full House in Back — which doesn't clear Back's >1 threshold) render with the plain dashed zone outline. `ArrangementScreen`'s in-progress zones are unaffected — this is Results-only.
+
+### Changed
+- Compacted `ResultsScreen`'s per-player hand-reveal section: cards render smaller (2rem vs. 3rem wide) and each player's front/middle/back zones now lay out side-by-side instead of stacked, cutting that section's vertical height by roughly two-thirds. CSS-only change (`ResultsScreen.css`), no component/prop/state changes — reduces the scrolling needed to see a full round's results at 3-4 players, especially on desktop.
+
 ## [0.18.0] - 2026-08-06
 
 ### Added
