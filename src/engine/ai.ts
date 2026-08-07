@@ -1,5 +1,8 @@
 import type { Arrangement, Card, FiveCardHand, FrontHand } from '../types';
 import { compareHands } from './compareHands';
+import { frontPoints, middlePoints, backPoints } from './game';
+import { getHandStrength } from './handRank';
+import { validateArrangement } from './validate';
 
 function combinations<T>(items: T[], k: number): T[][] {
   if (k === 0) return [[]];
@@ -31,4 +34,56 @@ export function generateAIArrangement(hand: Card[]): Arrangement {
   const front = afterBack.filter((c) => !middle.includes(c)) as FrontHand;
 
   return { front, middle, back };
+}
+
+/**
+ * Optimal AI: brute-forces every valid (front, middle, back) partition of the 13-card
+ * hand and picks the one maximizing total zone points from the game's real scoring table
+ * (frontPoints/middlePoints/backPoints), rather than greedily maximizing the back hand
+ * alone. This is a globally optimal maximizer, not a distinct "personality" — it still
+ * always plays for the highest score, just correctly across all three zones together
+ * instead of one at a time. E.g. a natural Four of a Kind is worth more in the middle (8)
+ * than the back (4): whenever a legal (non-fouling) arrangement can place it there, this
+ * exhaustive search finds it automatically, since it's simply the highest-scoring option
+ * among every partition examined (verified: two-quad and straight-flush-plus-quad hands
+ * both correctly move the weaker/movable strong hand to the middle). A lone unbeatable
+ * hand (nothing else in the deal can beat it) is correctly forced to stay in back, since
+ * back must always beat middle — that's the rules, not a missed opportunity. Prefers a
+ * non-fouling arrangement; falls back to the highest-scoring arrangement overall only if
+ * every partition fouls (same accepted-risk caveat as generateAIArrangement above).
+ */
+export function generateOptimalArrangement(hand: Card[]): Arrangement {
+  let best: Arrangement | null = null;
+  let bestScore = -Infinity;
+  let bestValid: Arrangement | null = null;
+  let bestValidScore = -Infinity;
+
+  for (const frontCombo of combinations(hand, 3)) {
+    const afterFront = hand.filter((c) => !frontCombo.includes(c));
+    const frontScore = frontPoints(getHandStrength(frontCombo)[0]);
+
+    for (const middleCombo of combinations(afterFront, 5)) {
+      const backCombo = afterFront.filter((c) => !middleCombo.includes(c));
+      const total =
+        frontScore +
+        middlePoints(getHandStrength(middleCombo)[0]) +
+        backPoints(getHandStrength(backCombo)[0]);
+
+      const front = frontCombo as FrontHand;
+      const middle = middleCombo as FiveCardHand;
+      const back = backCombo as FiveCardHand;
+      const arrangement: Arrangement = { front, middle, back };
+
+      if (total > bestScore) {
+        bestScore = total;
+        best = arrangement;
+      }
+      if (total > bestValidScore && validateArrangement(front, middle, back).isValid) {
+        bestValidScore = total;
+        bestValid = arrangement;
+      }
+    }
+  }
+
+  return bestValid ?? best!;
 }

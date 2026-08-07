@@ -86,12 +86,12 @@ function flip(result: MatchupResult): MatchupResult {
 }
 
 /** Front only ever reaches High Card/Pair/Trips (category 4); Trips is worth 3, everything else 1. */
-function frontPoints(category: number): number {
+export function frontPoints(category: number): number {
   return category === 4 ? 3 : 1;
 }
 
 /** Middle: Full House=2, Four of a Kind=8, Straight/Royal Flush=10, everything else 1. */
-function middlePoints(category: number): number {
+export function middlePoints(category: number): number {
   if (category === 9) return 10;
   if (category === 8) return 8;
   if (category === 7) return 2;
@@ -99,7 +99,7 @@ function middlePoints(category: number): number {
 }
 
 /** Back: Four of a Kind=4, Straight/Royal Flush=5, everything else 1. */
-function backPoints(category: number): number {
+export function backPoints(category: number): number {
   if (category === 9) return 5;
   if (category === 8) return 4;
   return 1;
