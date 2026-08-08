@@ -5,6 +5,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.20.0] - 2026-08-08
+
+### Added
+- **Drag-and-drop card arrangement** in `ArrangementScreen`, built on `@dnd-kit/core`. Any card — from the hand tray or a zone — can now be dragged onto an empty zone slot to place it, onto another card (anywhere: hand or any zone) to swap the two, or back onto the hand tray to return it. The existing click-to-select/click-to-place/click-to-return flow keeps working completely unchanged (both interaction paths now share the same pure move/swap logic in the new `src/engine/arrangementMoves.ts`), and works on touch devices via `PointerSensor`. `ResultsScreen`'s read-only hand reveal is unaffected — its `CardView`/`HandZone` usage never mounts any drag-and-drop code, by design (see `architecture.md`).
+
+### Changed
+- `CardView` now forwards a ref and accepts a few optional pass-through props (`dragging`, `dropTarget`, plus standard button attributes) so `DraggableCardView` can wire it up for dnd-kit without needing a wrapper element. No behavior change for existing callers.
+
 ## [0.19.2] - 2026-08-07
 
 ### Fixed
