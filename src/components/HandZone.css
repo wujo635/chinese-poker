@@ -69,3 +69,8 @@
   cursor: default;
   opacity: 1;
 }
+
+.hand-zone__slot--over {
+  border: 2px solid #1f9e5c;
+  background: rgba(31, 158, 92, 0.1);
+}
