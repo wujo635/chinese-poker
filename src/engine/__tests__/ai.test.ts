@@ -150,6 +150,25 @@ describe('generateOptimalArrangement', () => {
     expect(back.filter((card) => card.rank === 'A')).toHaveLength(4);
   });
 
+  it('prefers a Flush in the back over an equally-scoring but weaker hand, breaking a formal-points tie by raw strength', () => {
+    // Reproduces a real play-test bug report: backPoints only rewards Four of a Kind and
+    // Straight Flush specially -- a Flush (category 6) scores the same flat 1 point as a bare
+    // Pair, so many valid partitions of this hand tie on total formal score (1+1+1=3). Ranks
+    // are deliberately non-adjacent (2,3,4,5,7 spades; 9/J/K/A pairs elsewhere) so no Straight
+    // can form anywhere in the hand -- a Flush is unambiguously the strongest 5-card hand
+    // obtainable here, and nothing can beat it from the middle, so it must land in back.
+    const hand: Card[] = [
+      c('spades', '2', 2), c('spades', '3', 3), c('spades', '4', 4), c('spades', '5', 5), c('spades', '7', 7),
+      c('hearts', '9', 9), c('diamonds', '9', 9),
+      c('hearts', 'J', 11), c('diamonds', 'J', 11),
+      c('hearts', 'K', 13), c('diamonds', 'K', 13),
+      c('hearts', 'A', 14), c('diamonds', 'A', 14),
+    ];
+    const { back } = generateOptimalArrangement(hand);
+    expect(getHandStrength(back)[0]).toBe(6); // Flush
+    expect(back.every((card) => card.suit === 'spades')).toBe(true);
+  });
+
   it('never scores lower than the Maximizer on the same hand, across many random deals', () => {
     for (let seed = 0; seed < 20; seed++) {
       const deck = shuffleDeck(createDeck(), () => (seed * 0.61803398875) % 1);
