@@ -27,19 +27,34 @@ function isFlush(cards: Card[]): boolean {
   return cards.every((c) => c.suit === cards[0].suit);
 }
 
-/** Returns the straight's high card value, or null if the cards don't form a straight.
- * Special-cases the A-2-3-4-5 wheel, whose high card is 5, not the Ace's 14. */
-function straightHighCard(cards: Card[]): number | null {
+interface StraightInfo {
+  /** The card value used to rank this straight against others (see wheel note below). */
+  rankHigh: number;
+  /** The straight's actual high card, for display/labeling (e.g. Royal Flush detection). */
+  displayHigh: number;
+}
+
+/**
+ * Returns straight-ranking info, or null if the cards don't form a straight. Special-cases
+ * the A-2-3-4-5 wheel: it displays as "5-high" (the Ace plays low), but per house rule it
+ * ranks as the second-strongest straight — just below the Ace-high (broadway) straight and
+ * above every other straight — not the weakest as its low display value would otherwise
+ * imply. `rankHigh: 13.5` sits strictly between K-high (13) and broadway (14) for exactly
+ * that purpose; it's never shown to the user, only compared.
+ */
+function straightInfo(cards: Card[]): StraightInfo | null {
   const uniqueValues = [...new Set(cards.map((c) => c.value))].sort((a, b) => a - b);
   if (uniqueValues.length !== cards.length) return null;
 
   const isWheel = uniqueValues.join(',') === [2, 3, 4, 5, 14].join(',');
-  if (isWheel) return 5;
+  if (isWheel) return { rankHigh: 13.5, displayHigh: 5 };
 
   const isSequential = uniqueValues.every(
     (v, i) => i === 0 || v === uniqueValues[i - 1] + 1,
   );
-  return isSequential ? uniqueValues[uniqueValues.length - 1] : null;
+  if (!isSequential) return null;
+  const high = uniqueValues[uniqueValues.length - 1];
+  return { rankHigh: high, displayHigh: high };
 }
 
 /** [[value, count], ...] sorted by count desc, then value desc. */
@@ -58,9 +73,9 @@ export function getHandStrength(cards: Card[]): HandStrength {
   const counts = rankCounts(cards);
   const pattern = counts.map(([, count]) => count);
   const flush = cards.length === 5 && isFlush(cards);
-  const straightHigh = cards.length === 5 ? straightHighCard(cards) : null;
+  const straight = cards.length === 5 ? straightInfo(cards) : null;
 
-  if (straightHigh !== null && flush) return [9, straightHigh];
+  if (straight !== null && flush) return [9, straight.rankHigh];
   if (pattern[0] === 4) {
     const [quad] = counts[0];
     const [kicker] = counts[1];
@@ -72,7 +87,7 @@ export function getHandStrength(cards: Card[]): HandStrength {
     return [7, trip, pair];
   }
   if (flush) return [6, ...counts.map(([v]) => v)];
-  if (straightHigh !== null) return [5, straightHigh];
+  if (straight !== null) return [5, straight.rankHigh];
   if (pattern[0] === 3) {
     const [trip] = counts[0];
     const kickers = counts.slice(1).map(([v]) => v);
@@ -99,8 +114,8 @@ export function getSuitValue(suit: Card['suit']): number {
 export function identifyHandType(cards: Card[]): string {
   const [category] = getHandStrength(cards);
   if (category === 9) {
-    const high = straightHighCard(cards);
-    if (high === 14) return 'Royal Flush';
+    const straight = straightInfo(cards);
+    if (straight?.displayHigh === 14) return 'Royal Flush';
   }
   return HAND_TYPE_NAMES[category];
 }

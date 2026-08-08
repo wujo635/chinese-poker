@@ -45,14 +45,26 @@ describe('identifyHandType (5-card hands)', () => {
     ];
     const strength = getHandStrength(hand);
     expect(strength[0]).toBe(5); // Straight category
-    expect(strength[1]).toBe(5); // high card is the 5, not the ace
     expect(identifyHandType(hand)).toBe('Straight');
   });
 
-  it('ranks an A-K-Q-J-10 straight higher than the A-2-3-4-5 wheel', () => {
+  it('ranks straights per house rule: broadway (A-K-Q-J-10) > wheel (A-2-3-4-5) > every other straight', () => {
     const wheel = [c('spades', 'A', 14), c('hearts', '2', 2), c('diamonds', '3', 3), c('clubs', '4', 4), c('spades', '5', 5)];
     const broadway = [c('clubs', 'A', 14), c('diamonds', 'K', 13), c('hearts', 'Q', 12), c('spades', 'J', 11), c('clubs', '10', 10)];
-    expect(getHandStrength(broadway)[1]).toBeGreaterThan(getHandStrength(wheel)[1]);
+    // The next-highest natural straight below the wheel: 9-K (K-high), the strongest straight
+    // that isn't broadway or the wheel.
+    const kHigh = [c('diamonds', '9', 9), c('hearts', '10', 10), c('clubs', 'J', 11), c('spades', 'Q', 12), c('diamonds', 'K', 13)];
+    // The lowest natural straight: 2-6 (6-high).
+    const sixHigh = [c('spades', '2', 2), c('hearts', '3', 3), c('diamonds', '4', 4), c('clubs', '5', 5), c('spades', '6', 6)];
+
+    const wheelRank = getHandStrength(wheel)[1];
+    const broadwayRank = getHandStrength(broadway)[1];
+    const kHighRank = getHandStrength(kHigh)[1];
+    const sixHighRank = getHandStrength(sixHigh)[1];
+
+    expect(broadwayRank).toBeGreaterThan(wheelRank);
+    expect(wheelRank).toBeGreaterThan(kHighRank);
+    expect(kHighRank).toBeGreaterThan(sixHighRank);
   });
 
   it('detects Four of a Kind with correct kicker', () => {
