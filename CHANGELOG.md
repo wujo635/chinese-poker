@@ -5,6 +5,11 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.19.1] - 2026-08-07
+
+### Fixed
+- `generateOptimalArrangement()` (the AI Dealer's strategy in Player mode) could settle on an arbitrarily weak arrangement — e.g. High Card/High Card/Pair — while leaving a Flush unused, even though the Flush was legally available. Root cause: `frontPoints`/`middlePoints`/`backPoints` only reward a handful of top categories (Trips, Full House, Four of a Kind, Straight Flush); every other category from High Card through Flush/Straight scores a flat 1 regardless of actual strength, so many valid partitions of a hand tie on total formal score. The search picked whichever tied partition it happened to enumerate first, with no preference for the objectively stronger hand. Fixed by breaking ties on raw hand strength (the sum of each zone's category number) — reproduced and regression-tested with a hand where a Flush is the strongest obtainable back but formally ties with weaker alternatives.
+
 ## [0.19.0] - 2026-08-07
 
 ### Added

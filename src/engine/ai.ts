@@ -51,35 +51,50 @@ export function generateAIArrangement(hand: Card[]): Arrangement {
  * back must always beat middle — that's the rules, not a missed opportunity. Prefers a
  * non-fouling arrangement; falls back to the highest-scoring arrangement overall only if
  * every partition fouls (same accepted-risk caveat as generateAIArrangement above).
+ *
+ * frontPoints/middlePoints/backPoints only reward a handful of top categories (Trips,
+ * Full House, Four of a Kind, Straight Flush) — every other category from High Card
+ * through Flush/Straight scores a flat 1 regardless of actual strength, so many valid
+ * partitions tie on `total`. Ties are broken by raw hand strength (the sum of each zone's
+ * category number): without this, the search would settle on whichever formally-tied
+ * partition it happened to enumerate first, which could arbitrarily leave a Flush sitting
+ * unused in the discard pile while the back plays a bare Pair — same formal score, but a
+ * materially worse hand to actually put in front of an opponent.
  */
 export function generateOptimalArrangement(hand: Card[]): Arrangement {
   let best: Arrangement | null = null;
   let bestScore = -Infinity;
+  let bestRawStrength = -Infinity;
   let bestValid: Arrangement | null = null;
   let bestValidScore = -Infinity;
+  let bestValidRawStrength = -Infinity;
 
   for (const frontCombo of combinations(hand, 3)) {
     const afterFront = hand.filter((c) => !frontCombo.includes(c));
-    const frontScore = frontPoints(getHandStrength(frontCombo)[0]);
+    const frontCategory = getHandStrength(frontCombo)[0];
+    const frontScore = frontPoints(frontCategory);
 
     for (const middleCombo of combinations(afterFront, 5)) {
       const backCombo = afterFront.filter((c) => !middleCombo.includes(c));
-      const total =
-        frontScore +
-        middlePoints(getHandStrength(middleCombo)[0]) +
-        backPoints(getHandStrength(backCombo)[0]);
+      const middleCategory = getHandStrength(middleCombo)[0];
+      const backCategory = getHandStrength(backCombo)[0];
+      const total = frontScore + middlePoints(middleCategory) + backPoints(backCategory);
+      const rawStrength = frontCategory + middleCategory + backCategory;
 
       const front = frontCombo as FrontHand;
       const middle = middleCombo as FiveCardHand;
       const back = backCombo as FiveCardHand;
       const arrangement: Arrangement = { front, middle, back };
 
-      if (total > bestScore) {
+      if (total > bestScore || (total === bestScore && rawStrength > bestRawStrength)) {
         bestScore = total;
+        bestRawStrength = rawStrength;
         best = arrangement;
       }
-      if (total > bestValidScore && validateArrangement(front, middle, back).isValid) {
+      const isValid = validateArrangement(front, middle, back).isValid;
+      if (isValid && (total > bestValidScore || (total === bestValidScore && rawStrength > bestValidRawStrength))) {
         bestValidScore = total;
+        bestValidRawStrength = rawStrength;
         bestValid = arrangement;
       }
     }
