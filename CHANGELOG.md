@@ -5,6 +5,11 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.19.2] - 2026-08-07
+
+### Fixed
+- Straight ranking now follows house rule instead of standard poker order: **A-K-Q-J-10 (broadway) > A-2-3-4-5 (the wheel) > every other straight (6-high through K-high)**. Previously the wheel ranked as the *weakest* straight (its high card is the 5, since the Ace plays low), which is standard poker but not this game's intended rule. `handRank.ts`'s `straightInfo()` now returns a separate `rankHigh` (used for comparisons) from `displayHigh` (used only for Royal Flush detection/labeling) — the wheel's `rankHigh` is `13.5`, placing it strictly between K-high (13) and broadway (14) in the comparison tuple, while its `displayHigh` stays 5 so it still correctly reads as a plain "Straight," not a "Royal Flush."
+
 ## [0.19.1] - 2026-08-07
 
 ### Fixed
