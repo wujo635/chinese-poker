@@ -1,7 +1,7 @@
 import type { Arrangement, Card, FiveCardHand, FrontHand } from '../types';
 import { compareHands } from './compareHands';
 import { frontPoints, middlePoints, backPoints } from './game';
-import { getHandStrength } from './handRank';
+import { getHandStrength, type HandStrength } from './handRank';
 import { validateArrangement } from './validate';
 
 function combinations<T>(items: T[], k: number): T[][] {
@@ -36,6 +36,44 @@ export function generateAIArrangement(hand: Card[]): Arrangement {
   return { front, middle, back };
 }
 
+/** Lexicographic compare of two [category, ...tiebreakers] tuples; missing entries treated as 0. */
+function compareTuples(a: number[], b: number[]): number {
+  const len = Math.max(a.length, b.length);
+  for (let i = 0; i < len; i++) {
+    const diff = (a[i] ?? 0) - (b[i] ?? 0);
+    if (diff !== 0) return diff;
+  }
+  return 0;
+}
+
+interface PartitionMetrics {
+  total: number;
+  rawStrength: number;
+  front: HandStrength;
+  middle: HandStrength;
+  back: HandStrength;
+}
+
+/**
+ * Ranks two partitions that both maximize `total` (formal score): first by raw hand
+ * strength (category sum, existing tie-break), then by front/middle/back tuple in that
+ * priority order. Front is compared before middle/back because it's the zone most often
+ * left with an arbitrary leftover card grouping once score is already maximized — e.g.
+ * given a choice of which of several same-category pairs to leave in front, prefer the
+ * highest one, since front is the zone most likely to be individually beaten by an
+ * opponent and a higher pair wins more of those 1-on-1 comparisons even though the formal
+ * point value is identical.
+ */
+function isBetterPartition(candidate: PartitionMetrics, current: PartitionMetrics): boolean {
+  if (candidate.total !== current.total) return candidate.total > current.total;
+  if (candidate.rawStrength !== current.rawStrength) return candidate.rawStrength > current.rawStrength;
+  const frontCmp = compareTuples(candidate.front, current.front);
+  if (frontCmp !== 0) return frontCmp > 0;
+  const middleCmp = compareTuples(candidate.middle, current.middle);
+  if (middleCmp !== 0) return middleCmp > 0;
+  return compareTuples(candidate.back, current.back) > 0;
+}
+
 /**
  * Optimal AI: brute-forces every valid (front, middle, back) partition of the 13-card
  * hand and picks the one maximizing total zone points from the game's real scoring table
@@ -55,46 +93,43 @@ export function generateAIArrangement(hand: Card[]): Arrangement {
  * frontPoints/middlePoints/backPoints only reward a handful of top categories (Trips,
  * Full House, Four of a Kind, Straight Flush) — every other category from High Card
  * through Flush/Straight scores a flat 1 regardless of actual strength, so many valid
- * partitions tie on `total`. Ties are broken by raw hand strength (the sum of each zone's
- * category number): without this, the search would settle on whichever formally-tied
- * partition it happened to enumerate first, which could arbitrarily leave a Flush sitting
- * unused in the discard pile while the back plays a bare Pair — same formal score, but a
- * materially worse hand to actually put in front of an opponent.
+ * partitions tie on `total`, and often tie further on raw category sum too (e.g. any of
+ * several same-rank pairs can occupy front with identical category). `isBetterPartition`
+ * breaks these remaining ties by comparing full hand-strength tuples (front, then middle,
+ * then back) so the search settles on a deterministic, materially-strongest choice among
+ * formally-equal options instead of whichever one it happened to enumerate first.
  */
 export function generateOptimalArrangement(hand: Card[]): Arrangement {
   let best: Arrangement | null = null;
-  let bestScore = -Infinity;
-  let bestRawStrength = -Infinity;
+  let bestMetrics: PartitionMetrics = { total: -Infinity, rawStrength: -Infinity, front: [], middle: [], back: [] };
   let bestValid: Arrangement | null = null;
-  let bestValidScore = -Infinity;
-  let bestValidRawStrength = -Infinity;
+  let bestValidMetrics: PartitionMetrics = { total: -Infinity, rawStrength: -Infinity, front: [], middle: [], back: [] };
 
   for (const frontCombo of combinations(hand, 3)) {
     const afterFront = hand.filter((c) => !frontCombo.includes(c));
-    const frontCategory = getHandStrength(frontCombo)[0];
-    const frontScore = frontPoints(frontCategory);
+    const frontStrength = getHandStrength(frontCombo);
+    const frontScore = frontPoints(frontStrength[0]);
 
     for (const middleCombo of combinations(afterFront, 5)) {
       const backCombo = afterFront.filter((c) => !middleCombo.includes(c));
-      const middleCategory = getHandStrength(middleCombo)[0];
-      const backCategory = getHandStrength(backCombo)[0];
-      const total = frontScore + middlePoints(middleCategory) + backPoints(backCategory);
-      const rawStrength = frontCategory + middleCategory + backCategory;
+      const middleStrength = getHandStrength(middleCombo);
+      const backStrength = getHandStrength(backCombo);
+      const total = frontScore + middlePoints(middleStrength[0]) + backPoints(backStrength[0]);
+      const rawStrength = frontStrength[0] + middleStrength[0] + backStrength[0];
+      const metrics: PartitionMetrics = { total, rawStrength, front: frontStrength, middle: middleStrength, back: backStrength };
 
       const front = frontCombo as FrontHand;
       const middle = middleCombo as FiveCardHand;
       const back = backCombo as FiveCardHand;
       const arrangement: Arrangement = { front, middle, back };
 
-      if (total > bestScore || (total === bestScore && rawStrength > bestRawStrength)) {
-        bestScore = total;
-        bestRawStrength = rawStrength;
+      if (isBetterPartition(metrics, bestMetrics)) {
+        bestMetrics = metrics;
         best = arrangement;
       }
       const isValid = validateArrangement(front, middle, back).isValid;
-      if (isValid && (total > bestValidScore || (total === bestValidScore && rawStrength > bestValidRawStrength))) {
-        bestValidScore = total;
-        bestValidRawStrength = rawStrength;
+      if (isValid && isBetterPartition(metrics, bestValidMetrics)) {
+        bestValidMetrics = metrics;
         bestValid = arrangement;
       }
     }
