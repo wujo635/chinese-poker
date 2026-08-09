@@ -8,7 +8,7 @@
 
 .home__intro {
   max-width: 32rem;
-  color: #444;
+  color: var(--text-muted);
   line-height: 1.5;
 }
 
@@ -18,7 +18,7 @@
   gap: 0.5rem;
   max-width: 32rem;
   font-size: 0.9rem;
-  color: #444;
+  color: var(--text-muted);
 }
 
 .home__mode,
@@ -35,7 +35,7 @@
   margin: 0;
   font-weight: 600;
   font-size: 0.9rem;
-  color: #444;
+  color: var(--text-muted);
 }
 
 .home__actions {
@@ -63,7 +63,7 @@
 .home__leaderboard-column h4 {
   margin: 0 0 0.3rem;
   font-size: 0.9rem;
-  color: #444;
+  color: var(--text-muted);
 }
 
 .home__leaderboard-list {
@@ -71,11 +71,11 @@
   padding: 0 0 0 1.5rem;
   text-align: left;
   font-size: 0.9rem;
-  color: #444;
+  color: var(--text-muted);
 }
 
 .home__leaderboard-empty {
   margin: 0;
   font-size: 0.9rem;
-  color: #888;
+  color: var(--text-faint);
 }

@@ -28,7 +28,7 @@
 }
 
 .card-view--selected {
-  outline: 3px solid #2e86de;
+  outline: 3px solid var(--accent);
   transform: translateY(-6px);
 }
 

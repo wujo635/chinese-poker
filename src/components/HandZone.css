@@ -6,7 +6,7 @@
 }
 
 .hand-zone--placeable {
-  border-color: #2e86de;
+  border-color: var(--accent);
 }
 
 /*
@@ -41,12 +41,12 @@
   align-items: baseline;
   margin-bottom: 0.4rem;
   font-size: 0.85rem;
-  color: #555;
+  color: var(--text-muted);
 }
 
 .hand-zone__type {
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--text-h);
 }
 
 .hand-zone__cards {

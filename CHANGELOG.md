@@ -5,6 +5,11 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.20.1] - 2026-08-09
+
+### Fixed
+- Dark Mode readability: most body/secondary text was hardcoded to light-mode gray hex values (`#444`/`#555`/`#888`) instead of the theme-aware `--text`/`--text-h` variables already defined in `index.css`, so under `prefers-color-scheme: dark` this text stayed dark gray on the new near-black page background — effectively unreadable. Buttons had the same problem in reverse: a hardcoded white background with no explicit text color, so they kept a light background while inheriting dark mode's light-gray `--text`, producing low-contrast light-gray-on-white. Fixed by introducing `--text-muted`/`--text-faint`/`--surface`/`--surface-alt`/`--accent`/`--success`/`--success-bg`/`--danger`/`--danger-bg` CSS variables (each with a dark-mode override) and switching every component stylesheet (`Home.css`, `ArrangementScreen.css`, `HandZone.css`, `PlayerDashboard.css`, `ResultsScreen.css`, `ValidationStatus.css`, `CardView.css`, `index.css`) from hardcoded hex colors to these variables. `CardView` intentionally keeps its always-white background (playing cards read as physical cards regardless of theme) — only its selection-outline color was made theme-aware. Verified all touched text/background pairs meet WCAG AA contrast (4.5:1+) in dark mode via computed-style contrast checks in a real browser.
+
 ## [0.20.0] - 2026-08-08
 
 ### Added

@@ -17,13 +17,13 @@
   margin: 0.2rem 0 0;
   font-size: 0.85rem;
   font-weight: 600;
-  color: #555;
+  color: var(--text-muted);
 }
 
 .arrangement-screen__hint {
   margin-top: 0.4rem;
   font-size: 0.85rem;
-  color: #2e86de;
+  color: var(--accent);
 }
 
 .arrangement-screen__zones {
