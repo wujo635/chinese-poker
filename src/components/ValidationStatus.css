@@ -6,16 +6,16 @@
 }
 
 .validation-status--incomplete {
-  background: #f0f0f0;
-  color: #555;
+  background: var(--surface-alt);
+  color: var(--text-muted);
 }
 
 .validation-status--valid {
-  background: #e3f7e8;
-  color: #1e7e34;
+  background: var(--success-bg);
+  color: var(--success);
 }
 
 .validation-status--invalid {
-  background: #fdecea;
-  color: #b02a37;
+  background: var(--danger-bg);
+  color: var(--danger);
 }

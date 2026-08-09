@@ -1,8 +1,17 @@
 :root {
   --text: #333;
   --text-h: #111;
+  --text-muted: #555;
+  --text-faint: #888;
   --bg: #f7f7f5;
   --border: #ddd;
+  --surface: #fff;
+  --surface-alt: #eee;
+  --accent: #2e86de;
+  --success: #1e7e34;
+  --success-bg: #e3f7e8;
+  --danger: #b02a37;
+  --danger-bg: #fdecea;
 
   --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
 
@@ -20,8 +29,17 @@
   :root {
     --text: #d4d4d4;
     --text-h: #f3f4f6;
+    --text-muted: #a3a3a8;
+    --text-faint: #8a8a90;
     --bg: #1a1b1f;
-    --border: #333;
+    --border: #3a3b40;
+    --surface: #2a2b30;
+    --surface-alt: #313236;
+    --accent: #5aa3f0;
+    --success: #4ade80;
+    --success-bg: rgba(74, 222, 128, 0.12);
+    --danger: #f87171;
+    --danger-bg: rgba(248, 113, 113, 0.12);
   }
 }
 
@@ -39,7 +57,8 @@ button {
   padding: 0.5rem 1.2rem;
   border-radius: 0.4rem;
   border: 1px solid var(--border);
-  background: #fff;
+  background: var(--surface);
+  color: var(--text);
   cursor: pointer;
 }
 
@@ -49,5 +68,5 @@ button:disabled {
 }
 
 button:not(:disabled):hover {
-  background: #eee;
+  background: var(--surface-alt);
 }
