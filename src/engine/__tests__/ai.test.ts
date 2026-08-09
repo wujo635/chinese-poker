@@ -169,6 +169,27 @@ describe('generateOptimalArrangement', () => {
     expect(back.every((card) => card.suit === 'spades')).toBe(true);
   });
 
+  it('puts the highest of several same-category pairs in front when score and category-sum both tie', () => {
+    // Back is a lone unbeatable Four of a Kind (4s) -- keeping it intact is strictly the
+    // highest-scoring choice (backPoints rewards quads specially), so it never varies.
+    // That leaves AA/KK/QQ to split between front (pair + kicker) and middle (two pair +
+    // kicker): every such split scores identically (front pair = category 2 = flat 1
+    // point; two pair = category 3 = flat 1 point regardless of which two ranks), so the
+    // formal score and the raw category-sum tie no matter which single pair lands in
+    // front. The tie-break should prefer the highest pair (Aces) in front.
+    const hand: Card[] = [
+      c('clubs', '4', 4), c('diamonds', '4', 4), c('hearts', '4', 4), c('spades', '4', 4), c('clubs', '5', 5),
+      c('spades', 'A', 14), c('hearts', 'A', 14),
+      c('spades', 'K', 13), c('hearts', 'K', 13),
+      c('spades', 'Q', 12), c('hearts', 'Q', 12),
+      c('diamonds', '2', 2), c('diamonds', '3', 3),
+    ];
+    const { front, back } = generateOptimalArrangement(hand);
+
+    expect(back.filter((card) => card.rank === '4')).toHaveLength(4);
+    expect(front.filter((card) => card.rank === 'A')).toHaveLength(2);
+  });
+
   it('never scores lower than the Maximizer on the same hand, across many random deals', () => {
     for (let seed = 0; seed < 20; seed++) {
       const deck = shuffleDeck(createDeck(), () => (seed * 0.61803398875) % 1);

@@ -5,6 +5,11 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.20.2] - 2026-08-09
+
+### Fixed
+- `generateOptimalArrangement()` (the AI Dealer's strategy in Player mode) could leave an arbitrary one of several same-category cards in front when total formal score *and* raw category-sum both tied — e.g. given three pairs to split between front and middle, any of the three could end up in front, since a pair scores the same flat front point regardless of its rank. Fixed by adding a further tie-break that compares full hand-strength tuples (front, then middle, then back, in that priority order) so the search deterministically prefers the strongest available option in front — e.g. the highest of several tied pairs — instead of whichever formally-equal partition it happened to enumerate first.
+
 ## [0.20.1] - 2026-08-09
 
 ### Fixed
