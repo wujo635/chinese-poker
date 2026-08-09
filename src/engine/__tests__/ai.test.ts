@@ -190,6 +190,40 @@ describe('generateOptimalArrangement', () => {
     expect(front.filter((card) => card.rank === 'A')).toHaveLength(2);
   });
 
+  it('pairs a Three of a Kind with the smallest available pair for a Full House in back, puts the largest remaining pair in front, and the two middle pairs in the middle', () => {
+    // Hand: Three of a Kind (5s) + four pairs (A/K/Q/J) + two singles, no straights or
+    // flushes reachable anywhere (ranks/suits deliberately non-adjacent/non-matching).
+    // Putting the trips in front for its 3-point frontPoints bonus is tempting on paper,
+    // but front (category 4, Trips) would then outrank a Two Pair middle (category 3),
+    // which fouls (`middle-must-beat-front`) -- so that option is invalid. The best
+    // *valid* arrangement instead uses the trips to complete a Full House in back (the
+    // only zone that can legally hold the strongest hand here), leaving the four pairs to
+    // split between front (highest pair, by the front-priority tie-break) and middle (the
+    // two remaining pairs as Two Pair).
+    const hand: Card[] = [
+      c('clubs', '5', 5), c('diamonds', '5', 5), c('hearts', '5', 5),
+      c('spades', 'A', 14), c('clubs', 'A', 14),
+      c('diamonds', 'K', 13), c('hearts', 'K', 13),
+      c('spades', 'Q', 12), c('clubs', 'Q', 12),
+      c('diamonds', 'J', 11), c('hearts', 'J', 11),
+      c('spades', '2', 2), c('clubs', '3', 3),
+    ];
+    const { front, middle, back } = generateOptimalArrangement(hand);
+
+    expect(getHandStrength(back)[0]).toBe(7); // Full House
+    expect(back.filter((card) => card.rank === '5')).toHaveLength(3);
+    expect(back.filter((card) => card.rank === 'J')).toHaveLength(2); // smallest pair
+
+    expect(getHandStrength(front)[0]).toBe(2); // Pair
+    expect(front.filter((card) => card.rank === 'A')).toHaveLength(2); // largest pair
+
+    expect(getHandStrength(middle)[0]).toBe(3); // Two Pair
+    expect(middle.filter((card) => card.rank === 'K')).toHaveLength(2);
+    expect(middle.filter((card) => card.rank === 'Q')).toHaveLength(2);
+
+    expect(validateArrangement(front, middle, back).isValid).toBe(true);
+  });
+
   it('never scores lower than the Maximizer on the same hand, across many random deals', () => {
     for (let seed = 0; seed < 20; seed++) {
       const deck = shuffleDeck(createDeck(), () => (seed * 0.61803398875) % 1);
