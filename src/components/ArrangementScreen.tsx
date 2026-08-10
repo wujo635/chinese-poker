@@ -18,7 +18,7 @@ import { ValidationStatus } from './ValidationStatus';
 import { identifyHandType } from '../engine/handRank';
 import { validateArrangement } from '../engine/validate';
 import { compareCards } from '../engine/deck';
-import { generateAIArrangement } from '../engine/ai';
+import { generateOptimalArrangement } from '../engine/ai';
 import {
   cardKey,
   computeDragEndResult,
@@ -92,7 +92,7 @@ export function ArrangementScreen({
 
   function handleAutoPlace() {
     const fullHand = [...hand, ...front, ...middle, ...back];
-    const { front: newFront, middle: newMiddle, back: newBack } = generateAIArrangement(fullHand);
+    const { front: newFront, middle: newMiddle, back: newBack } = generateOptimalArrangement(fullHand);
     onChange({ hand: [], front: newFront, middle: newMiddle, back: newBack });
     setSelected(null);
   }

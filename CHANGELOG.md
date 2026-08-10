@@ -5,6 +5,11 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.21.1] - 2026-08-09
+
+### Changed
+- The human's "Auto-Place" button (`ArrangementScreen`) now uses `generateOptimalArrangement` instead of the greedy `generateAIArrangement` Maximizer, matching the AI seats (unified in v0.21.0). `generateAIArrangement` is no longer called from any production code path — it remains only as the baseline `ai.test.ts` compares Optimal against, proving Optimal never scores lower.
+
 ## [0.21.0] - 2026-08-09
 
 ### Changed
