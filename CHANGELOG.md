@@ -5,6 +5,17 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.21.1] - 2026-08-09
+
+### Changed
+- The human's "Auto-Place" button (`ArrangementScreen`) now uses `generateOptimalArrangement` instead of the greedy `generateAIArrangement` Maximizer, matching the AI seats (unified in v0.21.0). `generateAIArrangement` is no longer called from any production code path — it remains only as the baseline `ai.test.ts` compares Optimal against, proving Optimal never scores lower.
+
+## [0.21.0] - 2026-08-09
+
+### Changed
+- Every AI-controlled seat (not just the AI Dealer in Player mode) now uses the `generateOptimalArrangement` strategy — the greedy `generateAIArrangement` Maximizer was previously reserved for non-dealer bots, but the Optimal strategy isn't meaningfully more expensive or complex, so there was no reason to keep two AI tiers. `App.tsx`'s `dealWithAiArrangements` loop no longer branches on `player.id === state.dealerId`; every `type === 'ai'` player takes the same path. The human's "Auto-Place" button and the Maximizer-vs-Optimal comparison tests are unaffected — `generateAIArrangement` still exists and is exercised by both.
+- Note: "New Game"/"Play Again" now runs the ~150-300ms-per-seat brute-force search for up to 3 AI seats back-to-back instead of 1, a one-time synchronous cost of roughly 1 second in a dev build before the arranging screen renders. Accepted as a reasonable tradeoff for uniformly stronger AI play; not addressed with async/worker-based scheduling in this change.
+
 ## [0.20.2] - 2026-08-09
 
 ### Fixed
