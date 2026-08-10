@@ -262,19 +262,23 @@ describe('App', () => {
     expect(screen.getAllByText('No scores yet')).toHaveLength(2);
   });
 
-  it('the AI Dealer never fouls in Player mode, now that it uses the Optimal strategy', async () => {
+  it('no AI seat fouls in Player mode, since every AI player (dealer and bots alike) uses the Optimal strategy', async () => {
     const user = userEvent.setup();
     const { container } = render(<App />);
 
+    // Default seat count is 1 human, so the AI Dealer plus two non-dealer bots are all AI-controlled.
     await user.click(screen.getByRole('radio', { name: /Play vs AI Dealer/ }));
     await user.click(screen.getByRole('button', { name: 'New Game' }));
     await user.click(screen.getByRole('button', { name: 'Auto-Place' }));
     await user.click(screen.getByRole('button', { name: 'Confirm' }));
 
     expect(screen.getByRole('heading', { name: 'Round Results' })).toBeInTheDocument();
-    const dealerHeading = Array.from(container.querySelectorAll('.results-screen__player-hands h4')).find(
-      (h) => h.textContent!.includes('AI Dealer'),
-    )!;
-    expect(dealerHeading.textContent).not.toContain('Foul');
+    const aiHeadings = Array.from(container.querySelectorAll('.results-screen__player-hands h4')).filter(
+      (h) => h.textContent!.includes('AI Dealer') || h.textContent!.includes('Bot'),
+    );
+    expect(aiHeadings).toHaveLength(3); // AI Dealer + 2 non-dealer bots (4-seat game, 1 human)
+    for (const heading of aiHeadings) {
+      expect(heading.textContent).not.toContain('Foul');
+    }
   });
 });
