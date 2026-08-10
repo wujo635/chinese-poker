@@ -5,6 +5,11 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.21.2] - 2026-08-10
+
+### Fixed
+- CI build failure: three `App.test.tsx` tests that play two rounds (New Game/Play Again x2) timed out at Vitest's default 5000ms on the GitHub Actions runner, since v0.21.0/v0.21.1 made every AI seat and Auto-Place run the Optimal strategy's brute-force search (~150-300ms/seat) — a 2-round, 3-AI-seat session now costs up to ~1.8s of AI computation alone, on top of the userEvent/render overhead. Raised `testTimeout` to 15000ms globally in `vite.config.ts` (not just for the 3 failing tests) since several single-round tests were already passing at 2.5-4.6s locally, close enough to the old 5000ms ceiling to be a latent flakiness risk on a slower CI runner even though they hadn't failed yet.
+
 ## [0.21.1] - 2026-08-09
 
 ### Changed
