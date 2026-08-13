@@ -14,6 +14,54 @@ import type { Card, FiveCardHand, FrontHand, GameState } from '../../types';
 
 const c = (suit: Card['suit'], rank: Card['rank'], value: number): Card => ({ suit, rank, value });
 
+/**
+ * Splits a 13-card hand into an arbitrary structural 3/5/5 arrangement. `resolveRound`
+ * never re-validates an arrangement against `validateArrangement` -- it trusts whatever
+ * `isValid` a fixture sets -- so for auto-win tests, which only exercise `player.hand`
+ * (detectAutoWin never looks at `arrangement`), any 3/5/5 split is fine.
+ */
+function splitArrangement(hand: Card[]): { front: FrontHand; middle: FiveCardHand; back: FiveCardHand } {
+  return {
+    front: hand.slice(0, 3) as FrontHand,
+    middle: hand.slice(3, 8) as FiveCardHand,
+    back: hand.slice(8, 13) as FiveCardHand,
+  };
+}
+
+/** One card of every rank 2-A -- an Automatic Winning "Dragon" hand. */
+function dragonHand(): Card[] {
+  const ranks: [Card['rank'], number][] = [
+    ['2', 2], ['3', 3], ['4', 4], ['5', 5], ['6', 6], ['7', 7], ['8', 8],
+    ['9', 9], ['10', 10], ['J', 11], ['Q', 12], ['K', 13], ['A', 14],
+  ];
+  const suits: Card['suit'][] = ['spades', 'hearts', 'clubs', 'diamonds'];
+  return ranks.map(([rank, value], i) => c(suits[i % 4], rank, value));
+}
+
+/** Six paired ranks plus one odd card -- an Automatic Winning "Six Pairs" hand. */
+function sixPairsHand(): Card[] {
+  return [
+    c('spades', '2', 2), c('hearts', '2', 2),
+    c('spades', '3', 3), c('hearts', '3', 3),
+    c('spades', '4', 4), c('hearts', '4', 4),
+    c('spades', '5', 5), c('hearts', '5', 5),
+    c('spades', '6', 6), c('hearts', '6', 6),
+    c('spades', '7', 7), c('hearts', '7', 7),
+    c('clubs', '9', 9),
+  ];
+}
+
+/** Four paired ranks plus five same-suit singles -- an Automatic Winning "Four Pairs + Flush" hand. */
+function fourPairsFlushHand(): Card[] {
+  return [
+    c('spades', '2', 2), c('hearts', '2', 2),
+    c('spades', '3', 3), c('hearts', '3', 3),
+    c('spades', '4', 4), c('hearts', '4', 4),
+    c('spades', '5', 5), c('hearts', '5', 5),
+    c('clubs', '7', 7), c('clubs', '9', 9), c('clubs', 'J', 11), c('clubs', 'K', 13), c('clubs', 'A', 14),
+  ];
+}
+
 /** First name is human/dealer by default, matching the app's old single-human-at-index-0 convention. */
 function config(names: string[], dealerIndex = 0): InitGameConfig {
   return { seats: names.map((name, i) => ({ name, type: i === 0 ? 'human' : 'ai' })), dealerIndex };
@@ -226,6 +274,123 @@ describe('resolveRound', () => {
     expect(state.results.find((r) => r.playerId === 'player-1' && r.opponentId === 'player-3')).toBeUndefined();
     expect(state.results.find((r) => r.playerId === 'player-3' && r.opponentId === 'player-1')).toBeUndefined();
     expect(state.results.find((r) => r.playerId === 'player-2' && r.opponentId === 'player-1')).toBeUndefined();
+  });
+
+  it('replaces normal zone-by-zone scoring entirely when a player has a valid Automatic Winning Hand', () => {
+    let state = buildTwoPlayerState();
+    const hand = sixPairsHand();
+    state.players[0] = { ...state.players[0], isValid: true, hand, arrangement: splitArrangement(hand) };
+
+    // Opponent has an objectively crushing hand (Trips front / Quads middle / Straight Flush
+    // back) that would net a huge normal-scoring win (+16) against player-0's flimsy pair/two-pair/
+    // two-pair split if the auto-win bonus didn't override it.
+    state.players[1] = {
+      ...state.players[1],
+      isValid: true,
+      arrangement: {
+        front: [c('spades', 'A', 14), c('hearts', 'A', 14), c('diamonds', 'A', 14)],
+        middle: [c('spades', 'K', 13), c('hearts', 'K', 13), c('diamonds', 'K', 13), c('clubs', 'K', 13), c('spades', '2', 2)],
+        back: [c('spades', '5', 5), c('spades', '6', 6), c('spades', '7', 7), c('spades', '8', 8), c('spades', '9', 9)],
+      },
+    };
+
+    state = resolveRound(state);
+    const p0Result = state.results.find((r) => r.playerId === 'player-0')!;
+    expect(p0Result.roundScore).toBe(3); // Six Pairs bonus, not the -16 the zone-by-zone math would otherwise produce
+    expect(p0Result.frontResult).toBe('win');
+    expect(p0Result.middleResult).toBe('win');
+    expect(p0Result.backResult).toBe('win');
+    expect(state.players[0].score).toBe(3);
+    expect(state.players[1].score).toBe(-3);
+  });
+
+  it('applies the Automatic Winning Hand bonus regardless of whether the opponent also fouled', () => {
+    let state = buildTwoPlayerState();
+    const hand = dragonHand();
+    state.players[0] = { ...state.players[0], isValid: true, hand, arrangement: splitArrangement(hand) };
+    state.players[1] = { ...state.players[1], isValid: false, arrangement: null };
+
+    state = resolveRound(state);
+    const p0Result = state.results.find((r) => r.playerId === 'player-0')!;
+    expect(p0Result.roundScore).toBe(13); // Dragon bonus, not the ordinary +3 foul-win
+    expect(p0Result.frontResult).toBe('win');
+    expect(state.players[0].score).toBe(13);
+    expect(state.players[1].score).toBe(-13);
+  });
+
+  it('never applies the Automatic Winning Hand bonus if the player\'s own arrangement fouls', () => {
+    let state = buildTwoPlayerState();
+    const hand = dragonHand();
+    state.players[0] = { ...state.players[0], isValid: false, hand, arrangement: null };
+    state.players[1] = {
+      ...state.players[1],
+      isValid: true,
+      arrangement: {
+        front: [c('clubs', '3', 3), c('diamonds', '4', 4), c('hearts', '2', 2)],
+        middle: [c('hearts', '8', 8), c('clubs', '9', 9), c('diamonds', '3', 3), c('spades', '5', 5), c('hearts', '9', 9)],
+        back: [c('clubs', 'J', 11), c('diamonds', 'J', 11), c('hearts', '3', 3), c('spades', '7', 7), c('clubs', '2', 2)],
+      },
+    };
+
+    state = resolveRound(state);
+    expect(state.players[0].score).toBe(-3); // ordinary foul penalty, no Dragon bonus
+    expect(state.players[1].score).toBe(3);
+  });
+
+  it('lets a higher-tier Automatic Winning Hand (Dragon) beat a lower-tier one', () => {
+    let state = buildTwoPlayerState();
+    const dragon = dragonHand();
+    const sixPairs = sixPairsHand();
+    state.players[0] = { ...state.players[0], isValid: true, hand: dragon, arrangement: splitArrangement(dragon) };
+    state.players[1] = { ...state.players[1], isValid: true, hand: sixPairs, arrangement: splitArrangement(sixPairs) };
+
+    state = resolveRound(state);
+    expect(state.players[0].score).toBe(13);
+    expect(state.players[1].score).toBe(-13);
+  });
+
+  it('washes two different tier-1 Automatic Winning Hands against each other', () => {
+    let state = buildTwoPlayerState();
+    const sixPairs = sixPairsHand();
+    const fourPairsFlush = fourPairsFlushHand();
+    state.players[0] = { ...state.players[0], isValid: true, hand: sixPairs, arrangement: splitArrangement(sixPairs) };
+    state.players[1] = { ...state.players[1], isValid: true, hand: fourPairsFlush, arrangement: splitArrangement(fourPairsFlush) };
+
+    state = resolveRound(state);
+    const p0Result = state.results.find((r) => r.playerId === 'player-0')!;
+    expect(p0Result.roundScore).toBe(0);
+    expect(p0Result.frontResult).toBe('tie');
+    expect(p0Result.middleResult).toBe('tie');
+    expect(p0Result.backResult).toBe('tie');
+    expect(state.players[0].score).toBe(0);
+    expect(state.players[1].score).toBe(0);
+  });
+
+  it('washes the same tier-1 Automatic Winning Hand type against itself', () => {
+    let state = buildTwoPlayerState();
+    const handA = sixPairsHand();
+    const handB = sixPairsHand();
+    state.players[0] = { ...state.players[0], isValid: true, hand: handA, arrangement: splitArrangement(handA) };
+    state.players[1] = { ...state.players[1], isValid: true, hand: handB, arrangement: splitArrangement(handB) };
+
+    state = resolveRound(state);
+    expect(state.players[0].score).toBe(0);
+    expect(state.players[1].score).toBe(0);
+  });
+
+  it('washes two Dragons against each other', () => {
+    let state = buildTwoPlayerState();
+    const handA = dragonHand();
+    const handB = dragonHand();
+    state.players[0] = { ...state.players[0], isValid: true, hand: handA, arrangement: splitArrangement(handA) };
+    state.players[1] = { ...state.players[1], isValid: true, hand: handB, arrangement: splitArrangement(handB) };
+
+    state = resolveRound(state);
+    const p0Result = state.results.find((r) => r.playerId === 'player-0')!;
+    expect(p0Result.roundScore).toBe(0);
+    expect(p0Result.frontResult).toBe('tie');
+    expect(state.players[0].score).toBe(0);
+    expect(state.players[1].score).toBe(0);
   });
 });
 

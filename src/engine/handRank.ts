@@ -58,7 +58,7 @@ function straightInfo(cards: Card[]): StraightInfo | null {
 }
 
 /** [[value, count], ...] sorted by count desc, then value desc. */
-function rankCounts(cards: Card[]): [value: number, count: number][] {
+export function rankCounts(cards: Card[]): [value: number, count: number][] {
   const counts = new Map<number, number>();
   for (const c of cards) counts.set(c.value, (counts.get(c.value) ?? 0) + 1);
   return [...counts.entries()].sort((a, b) => b[1] - a[1] || b[0] - a[0]);
