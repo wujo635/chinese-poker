@@ -3,6 +3,7 @@ import { createDeck, dealCards, shuffleDeck } from './deck';
 import { compareHands } from './compareHands';
 import { getHandStrength } from './handRank';
 import { validateArrangement } from './validate';
+import { detectAutoWin, AUTO_WIN_POINTS, AUTO_WIN_TIER, type AutoWinType } from './autoWin';
 
 export interface SeatConfig {
   name: string;
@@ -117,10 +118,87 @@ function scoreZone(aHand: Card[], bHand: Card[], pointsFor: (category: number) =
   return { result: 'loss', score: -pointsFor(getHandStrength(bHand)[0]) };
 }
 
+/**
+ * Resolves a pairing where at least one side has a valid Automatic Winning Hand (Dragon,
+ * Six Pairs, Four Pairs + Flush/Straight, Three Flushes, or Three Straights) -- detected
+ * from the player's raw 13-card deal, independent of how it's arranged. The bonus REPLACES
+ * normal front/middle/back scoring for this pairing entirely. Higher tier beats lower
+ * (Dragon beats everything); same tier -- including two players with the same type, or two
+ * Dragons -- is a wash (0 for both).
+ */
+function scoreAutoWinPairing(
+  a: Player,
+  b: Player,
+  aType: AutoWinType | null,
+  bType: AutoWinType | null,
+): [RoundResult, RoundResult] {
+  if (aType && bType) {
+    const aTier = AUTO_WIN_TIER[aType];
+    const bTier = AUTO_WIN_TIER[bType];
+    if (aTier === bTier) {
+      const wash = { frontResult: 'tie', middleResult: 'tie', backResult: 'tie', roundScore: 0 } as const;
+      return [
+        { playerId: a.id, opponentId: b.id, ...wash },
+        { playerId: b.id, opponentId: a.id, ...wash },
+      ];
+    }
+    const aWins = aTier > bTier;
+    const points = AUTO_WIN_POINTS[aWins ? aType : bType];
+    return [
+      {
+        playerId: a.id,
+        opponentId: b.id,
+        frontResult: aWins ? 'win' : 'loss',
+        middleResult: aWins ? 'win' : 'loss',
+        backResult: aWins ? 'win' : 'loss',
+        roundScore: aWins ? points : -points,
+      },
+      {
+        playerId: b.id,
+        opponentId: a.id,
+        frontResult: aWins ? 'loss' : 'win',
+        middleResult: aWins ? 'loss' : 'win',
+        backResult: aWins ? 'loss' : 'win',
+        roundScore: aWins ? -points : points,
+      },
+    ];
+  }
+
+  const aWins = !!aType;
+  const points = AUTO_WIN_POINTS[(aType ?? bType)!];
+  return [
+    {
+      playerId: a.id,
+      opponentId: b.id,
+      frontResult: aWins ? 'win' : 'loss',
+      middleResult: aWins ? 'win' : 'loss',
+      backResult: aWins ? 'win' : 'loss',
+      roundScore: aWins ? points : -points,
+    },
+    {
+      playerId: b.id,
+      opponentId: a.id,
+      frontResult: aWins ? 'loss' : 'win',
+      middleResult: aWins ? 'loss' : 'win',
+      backResult: aWins ? 'loss' : 'win',
+      roundScore: aWins ? -points : points,
+    },
+  ];
+}
+
 /** Scores one pairing between two players, returning a RoundResult from each player's perspective. */
 function scorePairwise(a: Player, b: Player): [RoundResult, RoundResult] {
   const aFouled = !a.isValid || !a.arrangement;
   const bFouled = !b.isValid || !b.arrangement;
+
+  // Auto-win status only counts if that player's OWN arrangement is valid -- checked before
+  // the foul branches below so a valid auto-win short-circuits past the opponent's foul
+  // status entirely (the opponent fouling doesn't matter once the bonus applies).
+  const aAutoWin = !aFouled ? detectAutoWin(a.hand) : null;
+  const bAutoWin = !bFouled ? detectAutoWin(b.hand) : null;
+  if (aAutoWin || bAutoWin) {
+    return scoreAutoWinPairing(a, b, aAutoWin, bAutoWin);
+  }
 
   if (aFouled && bFouled) {
     const tie = { frontResult: 'tie', middleResult: 'tie', backResult: 'tie', roundScore: 0 } as const;

@@ -2,6 +2,7 @@ import type { Card, GameState, MatchupResult } from '../types';
 import { HandZone, type NotableTier } from './HandZone';
 import { getHandStrength, identifyHandType } from '../engine/handRank';
 import { frontPoints, middlePoints, backPoints } from '../engine/game';
+import { detectAutoWin, AUTO_WIN_LABELS } from '../engine/autoWin';
 import './ResultsScreen.css';
 
 interface ResultsScreenProps {
@@ -43,6 +44,13 @@ function notableTier(cards: Card[], pointsFor: (category: number) => number): No
   return TIER_BY_CATEGORY[category] ?? null;
 }
 
+/** An Automatic Winning Hand's label, or null -- the bonus (and its display) only applies to a valid arrangement. */
+function autoWinLabel(p: { hand: Card[]; isValid: boolean }): string | null {
+  if (!p.isValid) return null;
+  const type = detectAutoWin(p.hand);
+  return type ? AUTO_WIN_LABELS[type] : null;
+}
+
 export function ResultsScreen({ game, sessionTotals, onPlayAgain, onHome }: ResultsScreenProps) {
   const dealer = game.players.find((p) => p.id === game.dealerId)!;
   const opponents = game.players.filter((p) => p.id !== dealer.id);
@@ -55,6 +63,7 @@ export function ResultsScreen({ game, sessionTotals, onPlayAgain, onHome }: Resu
 
   const roundTotal = dealerMatchups.reduce((sum, { result }) => sum + result.roundScore, 0);
   const topSessionTotal = Math.max(...game.players.map((p) => sessionTotals[p.id] ?? 0));
+  const dealerAutoWin = autoWinLabel(dealer);
 
   return (
     <div className="results-screen">
@@ -68,26 +77,30 @@ export function ResultsScreen({ game, sessionTotals, onPlayAgain, onHome }: Resu
       </p>
 
       <div className="results-screen__matchups">
-        {dealerMatchups.map(({ opponent, result }) => (
-          <div key={opponent.id} className="matchup-row">
-            <span className="matchup-row__name">
-              {isDealerHuman ? 'You' : dealer.name} vs {opponent.name}
-              {opponent.type === 'human' ? ' (You)' : ''}
-            </span>
-            <span className="matchup-row__cell">
-              {RESULT_ICON[result.frontResult]} Front
-            </span>
-            <span className="matchup-row__cell">
-              {RESULT_ICON[result.middleResult]} Middle
-            </span>
-            <span className="matchup-row__cell">
-              {RESULT_ICON[result.backResult]} Back
-            </span>
-            <span className={`matchup-row__score matchup-row__score--${scoreClass(result.roundScore)}`}>
-              {formatScore(result.roundScore)}
-            </span>
-          </div>
-        ))}
+        {dealerMatchups.map(({ opponent, result }) => {
+          const opponentAutoWin = autoWinLabel(opponent);
+          return (
+            <div key={opponent.id} className="matchup-row">
+              <span className="matchup-row__name">
+                {isDealerHuman ? 'You' : dealer.name} vs {opponent.name}
+                {opponent.type === 'human' ? ' (You)' : ''}
+                {dealerAutoWin ? ` — ${dealerAutoWin}!` : opponentAutoWin ? ` — ${opponent.name}: ${opponentAutoWin}!` : ''}
+              </span>
+              <span className="matchup-row__cell">
+                {RESULT_ICON[result.frontResult]} Front
+              </span>
+              <span className="matchup-row__cell">
+                {RESULT_ICON[result.middleResult]} Middle
+              </span>
+              <span className="matchup-row__cell">
+                {RESULT_ICON[result.backResult]} Back
+              </span>
+              <span className={`matchup-row__score matchup-row__score--${scoreClass(result.roundScore)}`}>
+                {formatScore(result.roundScore)}
+              </span>
+            </div>
+          );
+        })}
       </div>
 
       <div className="results-screen__session-totals">
@@ -108,41 +121,45 @@ export function ResultsScreen({ game, sessionTotals, onPlayAgain, onHome }: Resu
       </div>
 
       <div className="results-screen__hands">
-        {game.players.map((p) => (
-          <div key={p.id} className="results-screen__player-hands">
-            <h4>
-              {p.name}
-              {p.id === dealer.id ? ' (Dealer)' : ''}
-              {p.type === 'human' ? ' (You)' : ''}
-              {!p.isValid ? ' — Foul' : ''}
-            </h4>
-            {p.arrangement && (
-              <div className="results-screen__zones">
-                <HandZone
-                  label="Front"
-                  cards={p.arrangement.front}
-                  capacity={3}
-                  handTypeLabel={identifyHandType(p.arrangement.front)}
-                  notableTier={notableTier(p.arrangement.front, frontPoints)}
-                />
-                <HandZone
-                  label="Middle"
-                  cards={p.arrangement.middle}
-                  capacity={5}
-                  handTypeLabel={identifyHandType(p.arrangement.middle)}
-                  notableTier={notableTier(p.arrangement.middle, middlePoints)}
-                />
-                <HandZone
-                  label="Back"
-                  cards={p.arrangement.back}
-                  capacity={5}
-                  handTypeLabel={identifyHandType(p.arrangement.back)}
-                  notableTier={notableTier(p.arrangement.back, backPoints)}
-                />
-              </div>
-            )}
-          </div>
-        ))}
+        {game.players.map((p) => {
+          const autoWin = autoWinLabel(p);
+          return (
+            <div key={p.id} className="results-screen__player-hands">
+              <h4>
+                {p.name}
+                {p.id === dealer.id ? ' (Dealer)' : ''}
+                {p.type === 'human' ? ' (You)' : ''}
+                {!p.isValid ? ' — Foul' : ''}
+                {autoWin ? ` — ${autoWin}!` : ''}
+              </h4>
+              {p.arrangement && (
+                <div className="results-screen__zones">
+                  <HandZone
+                    label="Front"
+                    cards={p.arrangement.front}
+                    capacity={3}
+                    handTypeLabel={identifyHandType(p.arrangement.front)}
+                    notableTier={notableTier(p.arrangement.front, frontPoints)}
+                  />
+                  <HandZone
+                    label="Middle"
+                    cards={p.arrangement.middle}
+                    capacity={5}
+                    handTypeLabel={identifyHandType(p.arrangement.middle)}
+                    notableTier={notableTier(p.arrangement.middle, middlePoints)}
+                  />
+                  <HandZone
+                    label="Back"
+                    cards={p.arrangement.back}
+                    capacity={5}
+                    handTypeLabel={identifyHandType(p.arrangement.back)}
+                    notableTier={notableTier(p.arrangement.back, backPoints)}
+                  />
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       <div className="results-screen__actions">

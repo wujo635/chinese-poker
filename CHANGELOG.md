@@ -5,6 +5,11 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.22.0] - 2026-08-12
+
+### Added
+- **Automatic Winning Hands** — the last item on the post-MVP backlog. Six special 13-card deals now win automatically against each opponent, detected from the player's raw hand independent of how it's arranged: Dragon (all 13 ranks 2 through Ace, 13 points), and five 3-point types — Six Pairs, Four Pairs + Flush, Four Pairs + Straight, Three Flushes, Three Straights. The bonus replaces normal front/middle/back scoring entirely for that pairing, as long as the player's own submitted arrangement is valid (a fouled arrangement forfeits the bonus and falls back to the ordinary foul penalty); the opponent's own foul status doesn't matter once the bonus applies. Dragon beats every other type; the five 3-point types wash against each other, including two of the same type or two Dragons. New `src/engine/autoWin.ts` module (`detectAutoWin`); `rankCounts` is now exported from `handRank.ts` for reuse. `ResultsScreen` shows a badge next to the qualifying player's name in both the matchup rows and the hand-reveal header.
+
 ## [0.21.2] - 2026-08-10
 
 ### Fixed

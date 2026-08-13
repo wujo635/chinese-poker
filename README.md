@@ -10,6 +10,7 @@ A web app for Chinese Poker: deal 13 cards, arrange them into front (3), middle 
 - Hand tray sorted by rank/suit, plus a one-click "Auto-Place" suggestion
 - AI-controlled seats arrange their own hands automatically
 - Round scoring: each hand is worth points based on the winning hand's strength (see below), automatic -3 foul loss
+- Automatic Winning Hands: certain rare deals (Dragon, Six Pairs, Four Pairs + Flush/Straight, Three Flushes, Three Straights) win a fixed bonus against every opponent regardless of arrangement, as long as your own submitted arrangement doesn't foul (see below)
 - Optional "allow invalid submissions" toggle on Home — turn off foul-blocking so a fouled arrangement can still be submitted (and auto-loses as usual)
 - Results screen with a round-total summary, Dealer-vs-each-opponent matchup breakdown, and all hands revealed
 - Session running totals: once a round is played, Home locks in that session's mode/seat-count and offers "Continue Session" or "End Session"; Results shows a "Session Totals" section with each seat's cumulative score and a crown on the leader(s). Totals are in-memory only (not persisted) and reset when the session ends.
@@ -35,6 +36,20 @@ Each of the three hands (front/middle/back) is scored independently — the winn
 | Back | Anything else | 1 |
 
 A round score is the sum of the three hands' points. A fouled arrangement (back doesn't beat middle, or middle doesn't beat front) is an automatic -3 loss against every valid opponent.
+
+## Automatic Winning Hands
+Certain 13-card deals win automatically against each opponent, detected from your raw hand regardless of how you arrange it — as long as your own submitted arrangement is still valid (a fouled arrangement forfeits the bonus and falls back to the ordinary -3 foul loss). The bonus replaces normal front/middle/back scoring entirely for that pairing:
+
+| Hand | Points |
+|---|---|
+| Dragon (all 13 ranks 2 through Ace) | 13 |
+| Six Pairs | 3 |
+| Four Pairs + Flush | 3 |
+| Four Pairs + Straight | 3 |
+| Three Flushes | 3 |
+| Three Straights | 3 |
+
+Dragon beats every other type. The five 3-point types wash against each other (0 points between just the two of them) if two players both have one in the same round — including two of the same type, or two Dragons.
 
 ## Getting Started
 

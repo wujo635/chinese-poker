@@ -139,6 +139,53 @@ describe('ResultsScreen', () => {
   });
 });
 
+describe('ResultsScreen (Automatic Winning Hands)', () => {
+  function sixPairsHand(): Card[] {
+    return [
+      c('spades', '2', 2), c('hearts', '2', 2),
+      c('spades', '3', 3), c('hearts', '3', 3),
+      c('spades', '4', 4), c('hearts', '4', 4),
+      c('spades', '5', 5), c('hearts', '5', 5),
+      c('spades', '6', 6), c('hearts', '6', 6),
+      c('spades', '7', 7), c('hearts', '7', 7),
+      c('clubs', '9', 9),
+    ];
+  }
+
+  function buildGameWithDealerHand(hand: Card[], isValid: boolean): GameState {
+    let state = initializeGame({
+      seats: [
+        { name: 'You', type: 'human' },
+        { name: 'Bot 1', type: 'ai' },
+        { name: 'Bot 2', type: 'ai' },
+        { name: 'Bot 3', type: 'ai' },
+      ],
+      dealerIndex: 0,
+    });
+    state = submitArrangement(state, 'player-0', strongArrangement.front, strongArrangement.middle, strongArrangement.back);
+    for (const id of ['player-1', 'player-2', 'player-3']) {
+      state = submitArrangement(state, id, weakArrangement.front, weakArrangement.middle, weakArrangement.back);
+    }
+    state.players[0] = { ...state.players[0], hand, isValid };
+    return resolveRound(state);
+  }
+
+  it('shows an Automatic Winning Hand badge in the hand-reveal header for a valid arrangement', () => {
+    const game = buildGameWithDealerHand(sixPairsHand(), true);
+    render(<ResultsScreen game={game} sessionTotals={{}} onPlayAgain={vi.fn()} onHome={vi.fn()} />);
+
+    expect(screen.getByText('You (Dealer) (You) — Six Pairs!')).toBeInTheDocument();
+  });
+
+  it('does not show a badge when the arrangement is invalid, even with an Automatic-Winning-Hand-shaped hand', () => {
+    const game = buildGameWithDealerHand(sixPairsHand(), false);
+    render(<ResultsScreen game={game} sessionTotals={{}} onPlayAgain={vi.fn()} onHome={vi.fn()} />);
+
+    expect(screen.getByText('You (Dealer) (You) — Foul')).toBeInTheDocument();
+    expect(screen.queryByText(/Six Pairs/)).not.toBeInTheDocument();
+  });
+});
+
 describe('ResultsScreen (Player mode, AI Dealer)', () => {
   function buildPlayerModeGame(): GameState {
     let state = initializeGame({
