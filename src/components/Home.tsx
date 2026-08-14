@@ -136,6 +136,8 @@ export function Home({
           </div>
         ))}
       </section>
+
+      <p className="home__version">v{__APP_VERSION__}</p>
     </div>
   );
 }
