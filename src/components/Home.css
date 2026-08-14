@@ -79,3 +79,9 @@
   font-size: 0.9rem;
   color: var(--text-faint);
 }
+
+.home__version {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--text-faint);
+}
