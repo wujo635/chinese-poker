@@ -5,6 +5,15 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.23.0] - 2026-08-14
+
+### Added
+- **Arranging-screen banner** for Automatic Winning Hands: as soon as a player's raw dealt hand qualifies (Dragon, Six Pairs, Four Pairs + Flush/Straight, Three Flushes, Three Straights), a banner shows the hand type and bonus value, with a checkbox to opt out of the bonus in favor of manual scoring — no more finding out only after Results.
+- **Results grouped display**: a player whose Automatic Winning Hand bonus applied now sees the natural grouping on Results (e.g. four pair-boxes + one straight-box) instead of the ordinary Front/Middle/Back breakdown, since that breakdown no longer reflects what actually scored. Styled with a distinct gold accent (`--auto-win`/`--auto-win-bg`, theme-aware).
+
+### Changed
+- The Automatic Winning Hand bonus is no longer unconditional. Playtesting surfaced a real scoring edge case: the bonus is a flat amount (13 for Dragon, 3 for everything else), but the normal per-zone scoring table can be worth more for a specific hand — e.g. a "Three Flushes" hand containing two Straight Flushes scores far more than the flat 3-point bonus under normal middle/back scoring. Players can now explicitly decline the bonus via the new arranging-screen toggle and arrange manually instead. `submitArrangement()` gained an optional `autoWinOptOut` parameter (default `false`, fully backward-compatible with every existing call site).
+
 ## [0.22.2] - 2026-08-14
 
 ### Added

@@ -190,6 +190,48 @@ describe('ResultsScreen (Automatic Winning Hands)', () => {
     expect(screen.getByText('You (Dealer) (You) — Foul')).toBeInTheDocument();
     expect(screen.queryByText(/Six Pairs/)).not.toBeInTheDocument();
   });
+
+  it('shows the natural grouping instead of Front/Middle/Back for a valid Automatic Winning Hand', () => {
+    const game = buildGameWithDealerHand(sixPairsHand(), true);
+    const { container } = render(<ResultsScreen game={game} sessionTotals={{}} onPlayAgain={vi.fn()} onHome={vi.fn()} />);
+
+    const dealerZones = container.querySelector('.results-screen__player-hands')!;
+    expect(dealerZones.querySelector('.hand-zone__label')?.textContent).toMatch(/^Pair 1/);
+    expect(dealerZones.textContent).not.toMatch(/Front \(/);
+    expect(dealerZones.textContent).not.toMatch(/Middle \(/);
+    expect(dealerZones.textContent).not.toMatch(/Back \(/);
+
+    const tieredZones = dealerZones.querySelectorAll('.hand-zone--tier-auto-win');
+    expect(tieredZones).toHaveLength(7); // 6 pairs + 1 odd card
+  });
+
+  it('shows the normal Front/Middle/Back breakdown (not the grouping) when the player declined the bonus', () => {
+    const hand = sixPairsHand();
+    let state = initializeGame({
+      seats: [
+        { name: 'You', type: 'human' },
+        { name: 'Bot 1', type: 'ai' },
+        { name: 'Bot 2', type: 'ai' },
+        { name: 'Bot 3', type: 'ai' },
+      ],
+      dealerIndex: 0,
+    });
+    state = submitArrangement(state, 'player-0', strongArrangement.front, strongArrangement.middle, strongArrangement.back, true);
+    for (const id of ['player-1', 'player-2', 'player-3']) {
+      state = submitArrangement(state, id, weakArrangement.front, weakArrangement.middle, weakArrangement.back);
+    }
+    state.players[0] = { ...state.players[0], hand };
+    const game = resolveRound(state);
+
+    const { container } = render(<ResultsScreen game={game} sessionTotals={{}} onPlayAgain={vi.fn()} onHome={vi.fn()} />);
+
+    expect(screen.queryByText(/Six Pairs/)).not.toBeInTheDocument();
+    const dealerZones = container.querySelector('.results-screen__player-hands')!;
+    expect(dealerZones.textContent).toMatch(/Front \(/);
+    expect(dealerZones.textContent).toMatch(/Middle \(/);
+    expect(dealerZones.textContent).toMatch(/Back \(/);
+    expect(dealerZones.querySelectorAll('.hand-zone--tier-auto-win')).toHaveLength(0);
+  });
 });
 
 describe('ResultsScreen (Player mode, AI Dealer)', () => {

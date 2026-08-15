@@ -19,6 +19,7 @@ import { identifyHandType } from '../engine/handRank';
 import { validateArrangement } from '../engine/validate';
 import { compareCards } from '../engine/deck';
 import { generateOptimalArrangement } from '../engine/ai';
+import { getAutoWinDisplay, AUTO_WIN_LABELS, AUTO_WIN_POINTS } from '../engine/autoWin';
 import {
   cardKey,
   computeDragEndResult,
@@ -40,6 +41,8 @@ interface ArrangementScreenProps {
   arrangement: ArrangementState;
   allowInvalidSubmissions: boolean;
   seatProgress?: SeatProgress;
+  autoWinOptOut: boolean;
+  onAutoWinOptOutChange: (optOut: boolean) => void;
   onChange: (next: ArrangementState) => void;
   onConfirm: () => void;
   onSaveExit: () => void;
@@ -58,6 +61,8 @@ export function ArrangementScreen({
   arrangement,
   allowInvalidSubmissions,
   seatProgress,
+  autoWinOptOut,
+  onAutoWinOptOutChange,
   onChange,
   onConfirm,
   onSaveExit,
@@ -65,6 +70,8 @@ export function ArrangementScreen({
   const [selected, setSelected] = useState<Card | null>(null);
   const [activeCard, setActiveCard] = useState<Card | null>(null);
   const { hand, front, middle, back } = arrangement;
+  const fullHand = [...hand, ...front, ...middle, ...back];
+  const autoWin = getAutoWinDisplay(fullHand);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
 
@@ -86,12 +93,11 @@ export function ArrangementScreen({
   }
 
   function handleReset() {
-    onChange({ hand: [...hand, ...front, ...middle, ...back], front: [], middle: [], back: [] });
+    onChange({ hand: fullHand, front: [], middle: [], back: [] });
     setSelected(null);
   }
 
   function handleAutoPlace() {
-    const fullHand = [...hand, ...front, ...middle, ...back];
     const { front: newFront, middle: newMiddle, back: newBack } = generateOptimalArrangement(fullHand);
     onChange({ hand: [], front: newFront, middle: newMiddle, back: newBack });
     setSelected(null);
@@ -99,7 +105,7 @@ export function ArrangementScreen({
 
   function handleDragStart(event: DragStartEvent) {
     const id = String(event.active.id);
-    const dragged = [...hand, ...front, ...middle, ...back].find((c) => cardKey(c) === id) ?? null;
+    const dragged = fullHand.find((c) => cardKey(c) === id) ?? null;
     setActiveCard(dragged);
     if (selected && dragged && cardKey(selected) === id) setSelected(null);
   }
@@ -136,6 +142,22 @@ export function ArrangementScreen({
             <p className="arrangement-screen__seat-progress">
               Arranging Seat {seatProgress.current} of {seatProgress.total}
             </p>
+          )}
+          {autoWin && (
+            <div className="arrangement-screen__auto-win-banner">
+              <p>
+                You have an Automatic Winning Hand: <strong>{AUTO_WIN_LABELS[autoWin.type]}</strong> (+
+                {AUTO_WIN_POINTS[autoWin.type]} vs each opponent)
+              </p>
+              <label className="arrangement-screen__auto-win-toggle">
+                <input
+                  type="checkbox"
+                  checked={!autoWinOptOut}
+                  onChange={(e) => onAutoWinOptOutChange(!e.target.checked)}
+                />
+                Use this automatic bonus (uncheck to arrange manually for a potentially higher score)
+              </label>
+            </div>
           )}
           <HandTray>
             {sortedHand.map((card) => (

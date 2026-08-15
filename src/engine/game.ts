@@ -71,10 +71,11 @@ export function submitArrangement(
   front: FrontHand,
   middle: FiveCardHand,
   back: FiveCardHand,
+  autoWinOptOut = false,
 ): GameState {
   const { isValid } = validateArrangement(front, middle, back);
   const players = state.players.map((p) =>
-    p.id === playerId ? { ...p, arrangement: { front, middle, back }, isValid } : p,
+    p.id === playerId ? { ...p, arrangement: { front, middle, back }, isValid, autoWinOptOut } : p,
   );
   const allSubmitted = players.every((p) => p.arrangement !== null);
   return { ...state, players, status: allSubmitted ? 'comparing' : state.status };
@@ -191,11 +192,12 @@ function scorePairwise(a: Player, b: Player): [RoundResult, RoundResult] {
   const aFouled = !a.isValid || !a.arrangement;
   const bFouled = !b.isValid || !b.arrangement;
 
-  // Auto-win status only counts if that player's OWN arrangement is valid -- checked before
-  // the foul branches below so a valid auto-win short-circuits past the opponent's foul
-  // status entirely (the opponent fouling doesn't matter once the bonus applies).
-  const aAutoWin = !aFouled ? detectAutoWin(a.hand) : null;
-  const bAutoWin = !bFouled ? detectAutoWin(b.hand) : null;
+  // Auto-win status only counts if that player's OWN arrangement is valid AND they haven't
+  // declined the bonus (autoWinOptOut) -- checked before the foul branches below so a valid
+  // auto-win short-circuits past the opponent's foul status entirely (the opponent fouling
+  // doesn't matter once the bonus applies).
+  const aAutoWin = !aFouled && !a.autoWinOptOut ? detectAutoWin(a.hand) : null;
+  const bAutoWin = !bFouled && !b.autoWinOptOut ? detectAutoWin(b.hand) : null;
   if (aAutoWin || bAutoWin) {
     return scoreAutoWinPairing(a, b, aAutoWin, bAutoWin);
   }

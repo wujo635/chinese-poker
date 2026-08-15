@@ -26,6 +26,30 @@
   color: var(--accent);
 }
 
+.arrangement-screen__auto-win-banner {
+  margin-top: 0.6rem;
+  padding: 0.6rem 1rem;
+  border-radius: 0.4rem;
+  background: var(--auto-win-bg);
+  color: var(--auto-win);
+  font-weight: 600;
+  text-align: center;
+}
+
+.arrangement-screen__auto-win-banner p {
+  margin: 0;
+}
+
+.arrangement-screen__auto-win-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+  font-weight: 400;
+  font-size: 0.85rem;
+}
+
 .arrangement-screen__zones {
   display: flex;
   flex-direction: column;
