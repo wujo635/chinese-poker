@@ -138,6 +138,26 @@ describe('submitArrangement', () => {
     state = submitArrangement(state, 'player-0', front, middle, back);
     expect(state.players[0].isValid).toBe(false);
   });
+
+  it('defaults autoWinOptOut to false when omitted', () => {
+    let state = dealRound(initializeGame(config(['You', 'Bot 1'])));
+    const front: FrontHand = [c('spades', '2', 2), c('hearts', '2', 2), c('diamonds', '5', 5)];
+    const middle: FiveCardHand = [c('clubs', '8', 8), c('spades', '8', 8), c('hearts', '3', 3), c('diamonds', '4', 4), c('clubs', '9', 9)];
+    const back: FiveCardHand = [c('spades', 'A', 14), c('hearts', 'A', 14), c('diamonds', 'A', 14), c('clubs', 'A', 14), c('spades', '9', 9)];
+
+    state = submitArrangement(state, 'player-0', front, middle, back);
+    expect(state.players[0].autoWinOptOut).toBe(false);
+  });
+
+  it('sets autoWinOptOut when explicitly passed', () => {
+    let state = dealRound(initializeGame(config(['You', 'Bot 1'])));
+    const front: FrontHand = [c('spades', '2', 2), c('hearts', '2', 2), c('diamonds', '5', 5)];
+    const middle: FiveCardHand = [c('clubs', '8', 8), c('spades', '8', 8), c('hearts', '3', 3), c('diamonds', '4', 4), c('clubs', '9', 9)];
+    const back: FiveCardHand = [c('spades', 'A', 14), c('hearts', 'A', 14), c('diamonds', 'A', 14), c('clubs', 'A', 14), c('spades', '9', 9)];
+
+    state = submitArrangement(state, 'player-0', front, middle, back, true);
+    expect(state.players[0].autoWinOptOut).toBe(true);
+  });
 });
 
 describe('resolveRound', () => {
@@ -335,6 +355,28 @@ describe('resolveRound', () => {
     state = resolveRound(state);
     expect(state.players[0].score).toBe(-3); // ordinary foul penalty, no Dragon bonus
     expect(state.players[1].score).toBe(3);
+  });
+
+  it('never applies the Automatic Winning Hand bonus if the player opted out, even with a valid arrangement', () => {
+    let state = buildTwoPlayerState();
+    const hand = dragonHand();
+    // player-0's hand is Dragon-shaped and their arrangement is valid, but they declined the
+    // bonus (autoWinOptOut) -- normal front/middle/back scoring should apply instead of +13.
+    state.players[0] = { ...state.players[0], isValid: true, hand, autoWinOptOut: true, arrangement: splitArrangement(hand) };
+    state.players[1] = {
+      ...state.players[1],
+      isValid: true,
+      arrangement: {
+        front: [c('clubs', '3', 3), c('diamonds', '4', 4), c('hearts', '2', 2)],
+        middle: [c('hearts', '8', 8), c('clubs', '9', 9), c('diamonds', '3', 3), c('spades', '5', 5), c('hearts', '9', 9)],
+        back: [c('clubs', 'J', 11), c('diamonds', 'J', 11), c('hearts', '3', 3), c('spades', '7', 7), c('clubs', '2', 2)],
+      },
+    };
+
+    state = resolveRound(state);
+    const p0Result = state.results.find((r) => r.playerId === 'player-0')!;
+    expect(p0Result.roundScore).not.toBe(13); // not the Dragon bonus
+    expect(state.players[0].score).not.toBe(13);
   });
 
   it('lets a higher-tier Automatic Winning Hand (Dragon) beat a lower-tier one', () => {

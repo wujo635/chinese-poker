@@ -9,7 +9,7 @@ import './HandZone.css';
  * Keyed by hand category, not by zone -- Four of a Kind is 'quads' whether it landed in
  * Middle or Back, so it always gets the same color (see ResultsScreen's notableTier()).
  */
-export type NotableTier = 'trips' | 'full-house' | 'quads' | 'straight-flush';
+export type NotableTier = 'trips' | 'full-house' | 'quads' | 'straight-flush' | 'auto-win';
 
 interface HandZoneProps {
   label: string;

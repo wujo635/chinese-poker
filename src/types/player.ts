@@ -19,4 +19,6 @@ export interface Player {
   arrangement: Arrangement | null;
   isValid: boolean;
   score: number;
+  /** Player declined their Automatic Winning Hand bonus in favor of normal zone scoring. */
+  autoWinOptOut?: boolean;
 }

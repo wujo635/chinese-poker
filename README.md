@@ -10,7 +10,7 @@ A web app for Chinese Poker: deal 13 cards, arrange them into front (3), middle 
 - Hand tray sorted by rank/suit, plus a one-click "Auto-Place" suggestion
 - AI-controlled seats arrange their own hands automatically
 - Round scoring: each hand is worth points based on the winning hand's strength (see below), automatic -3 foul loss
-- Automatic Winning Hands: certain rare deals (Dragon, Six Pairs, Four Pairs + Flush/Straight, Three Flushes, Three Straights) win a fixed bonus against every opponent regardless of arrangement, as long as your own submitted arrangement doesn't foul (see below)
+- Automatic Winning Hands: certain rare deals (Dragon, Six Pairs, Four Pairs + Flush/Straight, Three Flushes, Three Straights) win a fixed bonus against every opponent regardless of arrangement, as long as your own submitted arrangement doesn't foul (see below). A banner appears on the arranging screen as soon as your hand qualifies, with a checkbox to opt out and score normally instead — useful when your actual cards would score more under the regular scoring table.
 - Optional "allow invalid submissions" toggle on Home — turn off foul-blocking so a fouled arrangement can still be submitted (and auto-loses as usual)
 - Results screen with a round-total summary, Dealer-vs-each-opponent matchup breakdown, and all hands revealed
 - Session running totals: once a round is played, Home locks in that session's mode/seat-count and offers "Continue Session" or "End Session"; Results shows a "Session Totals" section with each seat's cumulative score and a crown on the leader(s). Totals are in-memory only (not persisted) and reset when the session ends.
@@ -50,6 +50,8 @@ Certain 13-card deals win automatically against each opponent, detected from you
 | Three Straights | 3 |
 
 Dragon beats every other type. The five 3-point types wash against each other (0 points between just the two of them) if two players both have one in the same round — including two of the same type, or two Dragons.
+
+You can decline the bonus via the arranging-screen checkbox and score normally instead — since the bonus is a flat amount, a hand that happens to also contain, say, two Straight Flushes could be worth more under the regular scoring table than the automatic win. When the bonus applies, Results shows the natural grouping (e.g. the four pairs and the flush/straight) instead of the usual Front/Middle/Back breakdown, since that breakdown no longer reflects what scored.
 
 ## Getting Started
 

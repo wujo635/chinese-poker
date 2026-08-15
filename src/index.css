@@ -13,6 +13,7 @@
   --danger: #b02a37;
   --danger-bg: #fdecea;
   --auto-win: #8a5a00;
+  --auto-win-bg: #fdf1d9;
 
   --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
 
@@ -42,6 +43,7 @@
     --danger: #f87171;
     --danger-bg: rgba(248, 113, 113, 0.12);
     --auto-win: #f0b94d;
+    --auto-win-bg: rgba(240, 185, 77, 0.12);
   }
 }
 

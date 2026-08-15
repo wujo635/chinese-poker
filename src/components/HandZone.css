@@ -35,6 +35,14 @@
   background: rgba(123, 44, 191, 0.1);
 }
 
+/* Automatic Winning Hand groupings (Pair 1, Flush, Straight, etc.) -- uses the theme-aware
+   --auto-win/--auto-win-bg variables (index.css) rather than a fixed hex, unlike the tiers
+   above, since this one is new (v0.23.0) and follows the more recent, correct convention. */
+.hand-zone--tier-auto-win {
+  border: 2px solid var(--auto-win);
+  background: var(--auto-win-bg);
+}
+
 .hand-zone__header {
   display: flex;
   justify-content: space-between;

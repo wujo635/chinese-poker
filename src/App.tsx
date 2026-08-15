@@ -77,6 +77,7 @@ function App() {
   const [sessionTotals, setSessionTotals] = useState<Record<string, number>>({});
   const [sessionHumanIds, setSessionHumanIds] = useState<string[]>([]);
   const [leaderboard, setLeaderboard] = useState<Leaderboard>({ dealer: [], player: [] });
+  const [autoWinOptOut, setAutoWinOptOut] = useState(false);
 
   useEffect(() => {
     const ids = listSavedGameIds();
@@ -94,6 +95,7 @@ function App() {
     setArrangement(emptyArrangement(fresh.players.find((p) => p.id === first)!.hand));
     setPendingHumanIds(rest);
     setAllowInvalidSubmissions(allowInvalid);
+    setAutoWinOptOut(false);
     setView('arranging');
   }
 
@@ -136,6 +138,7 @@ function App() {
     setArrangement(first ? emptyArrangement(normalized.players.find((p) => p.id === first)!.hand) : null);
     setPendingHumanIds(rest);
     setAllowInvalidSubmissions(false);
+    setAutoWinOptOut(false);
     setView('arranging');
   }
 
@@ -155,6 +158,7 @@ function App() {
       arrangement.front as FrontHand,
       arrangement.middle as FiveCardHand,
       arrangement.back as FiveCardHand,
+      autoWinOptOut,
     );
 
     if (updated.status === 'comparing') {
@@ -180,6 +184,7 @@ function App() {
     setArrangingPlayerId(next);
     setArrangement(emptyArrangement(updated.players.find((p) => p.id === next)!.hand));
     setPendingHumanIds(rest);
+    setAutoWinOptOut(false);
   }
 
   function handleHome() {
@@ -220,6 +225,8 @@ function App() {
             arrangement={arrangement}
             allowInvalidSubmissions={allowInvalidSubmissions}
             seatProgress={seatProgress}
+            autoWinOptOut={autoWinOptOut}
+            onAutoWinOptOutChange={setAutoWinOptOut}
             onChange={setArrangement}
             onConfirm={handleConfirm}
             onSaveExit={handleSaveExit}
