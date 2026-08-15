@@ -91,6 +91,17 @@
   margin: 0 0 0.4rem;
 }
 
+/* Automatic Winning Hand badge (Dragon, Six Pairs, etc.) -- the rarest possible outcome,
+   so it gets its own gold accent, distinct from any of HandZone's per-category tier colors
+   (those are keyed to a single zone's hand, not a whole-13-card special hand). Uses the
+   theme-aware --auto-win variable (index.css) rather than a fixed hex -- verified via
+   real-browser contrast checks in both themes (see architecture.md's v0.20.1 Dark Mode
+   incident for why a fixed hex is a trap here). */
+.results-screen__auto-win {
+  font-weight: 700;
+  color: var(--auto-win);
+}
+
 .results-screen__zones {
   display: flex;
   flex-direction: row;

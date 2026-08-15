@@ -12,6 +12,7 @@
   --success-bg: #e3f7e8;
   --danger: #b02a37;
   --danger-bg: #fdecea;
+  --auto-win: #8a5a00;
 
   --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
 
@@ -40,6 +41,7 @@
     --success-bg: rgba(74, 222, 128, 0.12);
     --danger: #f87171;
     --danger-bg: rgba(248, 113, 113, 0.12);
+    --auto-win: #f0b94d;
   }
 }
 

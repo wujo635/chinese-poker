@@ -5,6 +5,11 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.22.2] - 2026-08-14
+
+### Added
+- An Automatic Winning Hand badge (Dragon, Six Pairs, etc.) on `ResultsScreen` now gets a distinct gold accent (matchup rows and the hand-reveal header), instead of inheriting the surrounding plain text color. New theme-aware `--auto-win` CSS variable in `index.css` (light `#8a5a00`, dark `#f0b94d`) — a first attempt using a fixed crimson hex was caught in real-browser contrast checks failing WCAG AA badly in dark mode (2.66:1, well under the 4.5:1 minimum) before it shipped, same class of bug as the earlier Dark Mode readability incident (v0.20.1).
+
 ## [0.22.1] - 2026-08-12
 
 ### Added

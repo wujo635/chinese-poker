@@ -172,9 +172,15 @@ describe('ResultsScreen (Automatic Winning Hands)', () => {
 
   it('shows an Automatic Winning Hand badge in the hand-reveal header for a valid arrangement', () => {
     const game = buildGameWithDealerHand(sixPairsHand(), true);
-    render(<ResultsScreen game={game} sessionTotals={{}} onPlayAgain={vi.fn()} onHome={vi.fn()} />);
+    const { container } = render(<ResultsScreen game={game} sessionTotals={{}} onPlayAgain={vi.fn()} onHome={vi.fn()} />);
 
-    expect(screen.getByText('You (Dealer) (You) — Six Pairs!')).toBeInTheDocument();
+    const badge = container.querySelector('.results-screen__player-hands .results-screen__auto-win')!;
+    expect(badge).toHaveTextContent('— Six Pairs!');
+    expect(badge.closest('h4')).toHaveTextContent('You (Dealer) (You) — Six Pairs!');
+
+    // The badge should also show up in every matchup row, since the auto-win holder is the dealer.
+    const matchupBadges = container.querySelectorAll('.results-screen__matchups .results-screen__auto-win');
+    expect(matchupBadges.length).toBeGreaterThan(0);
   });
 
   it('does not show a badge when the arrangement is invalid, even with an Automatic-Winning-Hand-shaped hand', () => {
