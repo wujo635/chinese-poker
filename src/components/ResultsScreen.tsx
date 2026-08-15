@@ -84,7 +84,14 @@ export function ResultsScreen({ game, sessionTotals, onPlayAgain, onHome }: Resu
               <span className="matchup-row__name">
                 {isDealerHuman ? 'You' : dealer.name} vs {opponent.name}
                 {opponent.type === 'human' ? ' (You)' : ''}
-                {dealerAutoWin ? ` — ${dealerAutoWin}!` : opponentAutoWin ? ` — ${opponent.name}: ${opponentAutoWin}!` : ''}
+                {dealerAutoWin ? (
+                  <span className="results-screen__auto-win"> — {dealerAutoWin}!</span>
+                ) : opponentAutoWin ? (
+                  <span className="results-screen__auto-win">
+                    {' '}
+                    — {opponent.name}: {opponentAutoWin}!
+                  </span>
+                ) : null}
               </span>
               <span className="matchup-row__cell">
                 {RESULT_ICON[result.frontResult]} Front
@@ -130,7 +137,7 @@ export function ResultsScreen({ game, sessionTotals, onPlayAgain, onHome }: Resu
                 {p.id === dealer.id ? ' (Dealer)' : ''}
                 {p.type === 'human' ? ' (You)' : ''}
                 {!p.isValid ? ' — Foul' : ''}
-                {autoWin ? ` — ${autoWin}!` : ''}
+                {autoWin ? <span className="results-screen__auto-win"> — {autoWin}!</span> : null}
               </h4>
               {p.arrangement && (
                 <div className="results-screen__zones">
